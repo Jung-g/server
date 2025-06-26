@@ -4,9 +4,8 @@ from core_method import create_access_token, create_refresh_token, get_db, pwd_c
 from models import Token, User
 
 router = APIRouter()
-login_router = APIRouter()
 
-@login_router.post("/user/login")
+@router.post("/user/login")
 def login_user(id: str, pw: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.UserID == id).first()
 

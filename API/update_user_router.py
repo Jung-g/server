@@ -5,13 +5,12 @@ from core_method import get_current_user_id, get_db, pwd_context
 from models import User
 
 router = APIRouter()
-update_user_router = APIRouter()
 
 class UserUpdate(BaseModel):
     name: str = None
     new_password: str = None
 
-@update_user_router.put("/user/update")
+@router.put("/user/update")
 def update_user(
     update_data: UserUpdate,
     db: Session = Depends(get_db),

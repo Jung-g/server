@@ -4,9 +4,8 @@ from core_method import get_current_user_id, get_db
 from models import BookMark, Word
 
 router = APIRouter()
-read_bookmark_router = APIRouter()
 
-@read_bookmark_router.get("/bookmark/list")
+@router.get("/bookmark/list")
 def get_bookmarked_words(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     bookmarks = db.query(BookMark).filter_by(UserID=user_id).all()
     

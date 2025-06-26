@@ -5,9 +5,8 @@ from core_method import create_access_token, get_db
 from models import Token
 
 router = APIRouter()
-re_access_token_router = APIRouter()
 
-@re_access_token_router.post("/token/re_access")
+@router.post("/token/re_access")
 def new_access_token(refresh_token: str, db: Session = Depends(get_db)):
     # DB에 해당 Refresh Token 있는지 확인
     token_entry = db.query(Token).filter(Token.Refresh_token == refresh_token).first()

@@ -4,9 +4,8 @@ from core_method import get_db, pwd_context
 from models import User
 
 router = APIRouter()
-register_router = APIRouter()
 
-@register_router.post("/user/register")
+@router.post("/user/register")
 async def register_user(id: str, pw: str, name: str, db: Session = Depends(get_db)):
     if db.query(User).filter(User.UserID == id).first():
         return {"success": False}

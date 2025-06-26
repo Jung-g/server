@@ -11,10 +11,9 @@ mp_pose = mp.solutions.pose
 mp_hands = mp.solutions.hands
 
 router = APIRouter()
-translate_router = APIRouter()
 
 # 수어 → 텍스트 → 번역
-@translate_router.post("/translate/sign-to-text")
+@router.post("/translate/sign-to-text")
 async def translate_sign_to_text(file: UploadFile = File(...), db: Session = Depends(get_db)):
     # 수어 동작 분석 모델 연결하기
 
@@ -43,7 +42,7 @@ async def translate_sign_to_text(file: UploadFile = File(...), db: Session = Dep
     }
 
 # 텍스트 → 수어 애니메이션
-@translate_router.get("/translate/text-to-sign")
+@router.get("/translate/text-to-sign")
 def get_sign_animation(word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     word = db.query(Word).filter(Word.Word == word_text).first()
     if not word or not word.animations:

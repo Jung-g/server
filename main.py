@@ -17,7 +17,7 @@ from API.calendar_router import router as calendar_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    #init_db()
+    init_db()
     print("DB 연결 완료")
 
     yield 

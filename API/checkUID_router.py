@@ -4,9 +4,8 @@ from core_method import get_db
 from models import User
 
 router = APIRouter()
-check_Userid_router = APIRouter()
 
-@check_Userid_router.get("/user/check_id")
+@router.get("/user/check_id")
 async def check_user_id(id: str, db: Session = Depends(get_db)):
     exists = db.query(User).filter(User.UserID == id).first()
     return {"available": not bool(exists)}

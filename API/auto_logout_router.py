@@ -5,9 +5,8 @@ from core_method import get_db
 from models import Token
 
 router = APIRouter()
-auto_logout_router = APIRouter()
 
-@auto_logout_router.post("/auto/logout")
+@router.post("/auto/logout")
 def refresh_access_token(refresh_token: str, db: Session = Depends(get_db)):
     token_entry = db.query(Token).filter(Token.Refresh_token == refresh_token).first()
 
