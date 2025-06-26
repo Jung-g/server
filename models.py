@@ -6,7 +6,7 @@ Base = declarative_base()
 # User 테이블
 class User(Base):
     __tablename__ = "User"
-    UserID = Column(String, primary_key=True)  # varchar(max)
+    UserID = Column(String(256), primary_key=True)  # varchar(max)
     PassWord = Column(String)
     UserName = Column(String)
 
@@ -54,7 +54,7 @@ class StudyWord(Base):
 # Study_records 테이블
 class StudyRecord(Base):
     __tablename__ = "Study_records"
-    UserID = Column(String, ForeignKey("User.UserID"), primary_key=True)
+    UserID = Column(String(256), ForeignKey("User.UserID"), primary_key=True)
     SID = Column(Integer, ForeignKey("Study.SID"), primary_key=True)
     Study_Date = Column(DateTime, primary_key=True)
     # Complate = Column(Boolean)
@@ -66,7 +66,7 @@ class StudyRecord(Base):
 class BookMark(Base):
     __tablename__ = "BookMark"
     BID = Column(Integer, primary_key=True)
-    UserID = Column(String, ForeignKey("User.UserID"))
+    UserID = Column(String(256), ForeignKey("User.UserID"))
     WID = Column(Integer, ForeignKey("Word.WID"))
 
     user = relationship("User", back_populates="bookmarks")
@@ -76,7 +76,7 @@ class BookMark(Base):
 class Token(Base):
     __tablename__ = "Token"
     TID = Column(Integer, primary_key=True, autoincrement=True)
-    UserID = Column(String, ForeignKey("User.UserID"))
+    UserID = Column(String(256), ForeignKey("User.UserID"))
     Refresh_token = Column(String, unique=True)
     Expires = Column(DateTime)
 
