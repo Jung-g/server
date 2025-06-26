@@ -6,7 +6,7 @@ from models import BookMark, Word
 router = APIRouter()
 
 @router.get("/bookmark/list")
-def get_bookmarked_words(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+async def get_bookmarked_words(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     bookmarks = db.query(BookMark).filter_by(UserID=user_id).all()
     
     result = []

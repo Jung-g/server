@@ -6,7 +6,7 @@ from models import Word
 router = APIRouter()
 
 @router.get("/dictionary/words")
-def get_words(query: str = Query(None), db: Session = Depends(get_db)):
+async def get_words(query: str = Query(None), db: Session = Depends(get_db)):
     if query:
         words = db.query(Word).filter(Word.Word.contains(query)).all()
     else:

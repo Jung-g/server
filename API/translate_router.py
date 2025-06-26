@@ -43,7 +43,7 @@ async def translate_sign_to_text(file: UploadFile = File(...), db: Session = Dep
 
 # 텍스트 → 수어 애니메이션
 @router.get("/translate/text-to-sign")
-def get_sign_animation(word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
+async def get_sign_animation(word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     word = db.query(Word).filter(Word.Word == word_text).first()
     if not word or not word.animations:
         raise HTTPException(status_code=404, detail="애니메이션이 존재하지 않습니다.")
@@ -54,7 +54,7 @@ def get_sign_animation(word_text: str = Query(..., description="입력된 한국
     }
 
 # 사용자 실시간 영상에서 npy 추출
-def run_sign_model(frame: np.ndarray, db: Session) -> str:
+async def run_sign_model(frame: np.ndarray, db: Session) -> str:
     # MediaPipe 초기화
     with mp_pose.Pose(static_image_mode=True) as pose, \
          mp_hands.Hands(static_image_mode=True, max_num_hands=2) as hands:

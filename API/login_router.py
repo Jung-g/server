@@ -1,12 +1,20 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from core_method import create_access_token, create_refresh_token, get_db, pwd_context
 from models import Token, User
 
 router = APIRouter()
 
+class LoginRequest(BaseModel):
+    id: str
+    pw: str
+
 @router.post("/user/login")
-def login_user(id: str, pw: str, db: Session = Depends(get_db)):
+async def login_user(req: LoginRequest, db: Session = Depends(get_db)):
+    id = req.id
+    pw = req.pw
+
     user = db.query(User).filter(User.UserID == id).first()
 
     if not user:

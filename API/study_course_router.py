@@ -6,7 +6,7 @@ from core_method import get_db
 router = APIRouter()
 
 @router.get("/study/course")
-def get_course_detail(course_name: str = Query(..., description="학습 코스 이름"), db: Session = Depends(get_db)):
+async def get_course_detail(course_name: str = Query(..., description="학습 코스 이름"), db: Session = Depends(get_db)):
 
     study = db.query(Study).filter(Study.Study_Course == course_name).first()
     if not study:

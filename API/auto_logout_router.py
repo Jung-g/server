@@ -1,13 +1,18 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from core_method import get_db
 from models import Token
 
 router = APIRouter()
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
 @router.post("/auto/logout")
-def refresh_access_token(refresh_token: str, db: Session = Depends(get_db)):
+async def refresh_access_token(req: RefreshRequest, db: Session = Depends(get_db)):
+    refresh_token = req.refresh_token
     token_entry = db.query(Token).filter(Token.Refresh_token == refresh_token).first()
 
     if not token_entry:

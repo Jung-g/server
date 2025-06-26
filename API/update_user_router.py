@@ -11,11 +11,7 @@ class UserUpdate(BaseModel):
     new_password: str = None
 
 @router.put("/user/update")
-def update_user(
-    update_data: UserUpdate,
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
+async def update_user(update_data: UserUpdate, db: Session = Depends(get_db), user_id: str = Depends(get_current_user_id)):
     user = db.query(User).filter(User.UserID == user_id).first()
     if not user:
         return {"success": False}
