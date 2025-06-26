@@ -1,4 +1,4 @@
-name: sign-learning-server
+name: sign_learning_server
 channels:
   - defaults
   - conda-forge
