@@ -1,0 +1,17 @@
+name: sign-learning-server
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - fastapi
+  - uvicorn
+  - sqlalchemy
+  - python-dotenv
+  - python-jose
+  - passlib
+  - bcrypt
+  - pyodbc
+  - mediapipe
+  - opencv-python
+  - numpy

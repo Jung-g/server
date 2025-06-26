@@ -1,6 +1,10 @@
-fastapi[all]
+fastapi
+uvicorn
 sqlalchemy
-pymysql
-jinja2
-python-jose[cryptography]
+python-dotenv
+python-jose
 passlib[bcrypt]
+pyodbc
+mediapipe
+opencv-python
+numpy
