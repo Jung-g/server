@@ -12,8 +12,8 @@ from passlib.context import CryptContext
 
 from API import (dictionary_router, register_router, checkUID_router, 
                  login_router, access_token_router, auto_logout_router, 
-                 logout_router, study_course_router, update_user_router, 
-                 add_bookmark_router, read_bookmark_router, calendar_router)
+                 logout_router, study_course_router, translate_router, 
+                 update_user_router, add_bookmark_router, read_bookmark_router, calendar_router)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,8 +50,8 @@ app.include_router(update_user_router)
 # 사전
 app.include_router(dictionary_router)
 
-# 번역 (아마 외부 API 같이 활용할 듯)
-
+# 번역
+app.include_router(translate_router)
 
 # 학습 코스 선택
 app.include_router(study_course_router)
