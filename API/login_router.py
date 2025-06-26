@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from main import create_access_token, create_refresh_token, get_db, pwd_context
+from core_method import create_access_token, create_refresh_token, get_db, pwd_context
 from models import Token, User
 
 login_router = APIRouter()

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from main import create_access_token, get_db
+from core_method import create_access_token, get_db
 from models import Token
 
 re_access_token_router = APIRouter()

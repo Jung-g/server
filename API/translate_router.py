@@ -4,7 +4,7 @@ import numpy as np
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 from models import Word
-from main import get_db
+from core_method import get_db
 # 외부 번역 라이브러리나 API 서비스 추가하기
 
 mp_pose = mp.solutions.pose

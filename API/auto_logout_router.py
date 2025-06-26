@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from main import get_db
+from core_method import get_db
 from models import Token
 
 auto_logout_router = APIRouter()

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from main import get_current_user_id, get_db, pwd_context   
+from core_method import get_current_user_id, get_db, pwd_context   
 from models import User
 
 update_user_router = APIRouter()

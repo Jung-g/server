@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from main import get_db
+from core_method import get_db
 from models import Word
 
 dictionary_router = APIRouter()

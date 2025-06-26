@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from main import get_current_user_id, get_db
+from core_method import get_current_user_id, get_db
 from models import StudyRecord
 
 calendar_router = APIRouter()

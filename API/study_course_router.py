@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from models import Study, StudyWord, Word
-from main import get_db
+from core_method import get_db
 
 course_router = APIRouter()
 
