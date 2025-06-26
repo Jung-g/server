@@ -1,10 +1,19 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from DB import init_db, SessionLocal
-from API import (dictionary_router, register_router, checkUID_router, 
-                 login_router, access_token_router, auto_logout_router, 
-                 logout_router, study_course_router, translate_router, 
-                 update_user_router, add_bookmark_router, read_bookmark_router, calendar_router)
+from API.dictionary_router import router as dictionary_router
+from API.register_router import router as register_router
+from API.checkUID_router import router as checkUID_router
+from API.login_router import router as login_router
+from API.access_token_router import router as access_token_router
+from API.auto_logout_router import router as auto_logout_router
+from API.logout_router import router as logout_router
+from API.study_course_router import router as study_course_router
+from API.translate_router import router as translate_router
+from API.update_user_router import router as update_user_router
+from API.add_bookmark_router import router as add_bookmark_router
+from API.read_bookmark_router import router as read_bookmark_router
+from API.calendar_router import router as calendar_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

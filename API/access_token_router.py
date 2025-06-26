@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from core_method import create_access_token, get_db
 from models import Token
 
+router = APIRouter()
 re_access_token_router = APIRouter()
 
 @re_access_token_router.post("/token/re_access")

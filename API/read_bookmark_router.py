@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from core_method import get_current_user_id, get_db
 from models import BookMark, Word
 
+router = APIRouter()
 read_bookmark_router = APIRouter()
 
 @read_bookmark_router.get("/bookmark/list")

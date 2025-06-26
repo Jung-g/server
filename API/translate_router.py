@@ -10,6 +10,7 @@ from core_method import get_db
 mp_pose = mp.solutions.pose
 mp_hands = mp.solutions.hands
 
+router = APIRouter()
 translate_router = APIRouter()
 
 # 수어 → 텍스트 → 번역

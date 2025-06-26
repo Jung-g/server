@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from core_method import create_access_token, create_refresh_token, get_db, pwd_context
 from models import Token, User
 
+router = APIRouter()
 login_router = APIRouter()
 
 @login_router.post("/user/login")

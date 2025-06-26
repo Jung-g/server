@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from core_method import get_db
 from models import Word
 
+router = APIRouter()
 dictionary_router = APIRouter()
 
 @dictionary_router.get("/dictionary/words")

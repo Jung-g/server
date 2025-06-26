@@ -8,3 +8,5 @@ pyodbc
 mediapipe
 opencv-python
 numpy
+python-dateutil
+python-multipart

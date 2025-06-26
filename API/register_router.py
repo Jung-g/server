@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from core_method import get_db, pwd_context
 from models import User
 
+router = APIRouter()
 register_router = APIRouter()
 
 @register_router.post("/user/register")

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from core_method import get_current_user_id, get_db, pwd_context   
 from models import User
 
+router = APIRouter()
 update_user_router = APIRouter()
 
 class UserUpdate(BaseModel):

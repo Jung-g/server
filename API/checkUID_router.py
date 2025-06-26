@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from core_method import get_db
 from models import User
 
+router = APIRouter()
 check_Userid_router = APIRouter()
 
 @check_Userid_router.get("/user/check_id")

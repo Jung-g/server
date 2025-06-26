@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from core_method import get_current_user_id, get_db
 from models import StudyRecord
 
+router = APIRouter()
 calendar_router = APIRouter()
 
 @calendar_router.get("/study/calendar")

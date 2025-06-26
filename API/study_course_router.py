@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from models import Study, StudyWord, Word
 from core_method import get_db
 
+router = APIRouter()
 course_router = APIRouter()
 
 @course_router.get("/study/course")
