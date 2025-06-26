@@ -77,7 +77,7 @@ class Token(Base):
     __tablename__ = "Token"
     TID = Column(Integer, primary_key=True, autoincrement=True)
     UserID = Column(String(256), ForeignKey("User.UserID"))
-    Refresh_token = Column(String, unique=True)
+    Refresh_token = Column(String(1024), unique=True)
     Expires = Column(DateTime)
 
     user = relationship("User", backref="token")
