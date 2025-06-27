@@ -13,11 +13,10 @@ async def get_bookmarked_words(user_id: str = Depends(get_current_user_id), db: 
     for b in bookmarks:
         word = db.query(Word).filter_by(WID=b.WID).first()
         if word:
-            anime = word.animations[0].AnimePath if word.animations else ""
+            # anime = word.animations[0].AnimePath if word.animations else ""
             result.append({
                 "wid": word.WID,
                 "word": word.Word,
-                "animation": anime
             })
     
     return result

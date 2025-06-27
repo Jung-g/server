@@ -18,7 +18,9 @@ async def refresh_access_token(req: RefreshRequest, db: Session = Depends(get_db
     if not token_entry:
         return {"logged_in": False}
 
-    if token_entry.Expires < datetime.now(timezone.utc):
+    expires = token_entry.Expires.replace(tzinfo=timezone.utc)
+
+    if expires < datetime.now(timezone.utc):
         db.delete(token_entry)
         db.commit()
         return {"logged_in": False}

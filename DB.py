@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from models import Base
 
 # DB 연결
-SERVER = r"DESKTOP-5BAB4L8\SQLEXPRESS"
-DATABASE = "sign_learning"
+SERVER = r"LAPTOP-5P5I1F6C\SQLEXPRESS"
+DATABASE = "WB41"
 UID = "aaa"
 PWD = "1234"
 

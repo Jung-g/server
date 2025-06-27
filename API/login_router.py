@@ -46,6 +46,7 @@ async def login_user(req: LoginRequest, db: Session = Depends(get_db)):
 
     return {
         "success": True,
+        "userID": id,
         "access_token": access_token,
         "token_type": "bearer",
         "refresh_token": refresh_token,

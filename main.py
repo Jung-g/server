@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from DB import init_db, SessionLocal
+from fastapi.middleware.cors import CORSMiddleware
+from DB import init_db
 from API.dictionary_router import router as dictionary_router
 from API.register_router import router as register_router
 from API.checkUID_router import router as checkUID_router
 from API.login_router import router as login_router
 from API.access_token_router import router as access_token_router
 from API.auto_logout_router import router as auto_logout_router
+from API.auto_login_router import router as auto_login_router
 from API.logout_router import router as logout_router
 from API.study_course_router import router as study_course_router
 from API.translate_router import router as translate_router
@@ -14,6 +16,7 @@ from API.update_user_router import router as update_user_router
 from API.add_bookmark_router import router as add_bookmark_router
 from API.read_bookmark_router import router as read_bookmark_router
 from API.calendar_router import router as calendar_router
+from API.reset_password_router import router as reset_password_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +29,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # 회원가입
 app.include_router(register_router)
 
@@ -35,6 +46,9 @@ app.include_router(checkUID_router)
 # 로그인
 app.include_router(login_router)
 
+# 자동 로그인
+app.include_router(auto_login_router)
+
 # Access 토큰 만료시 재발급 (Refresh 토큰 일치시에만)
 app.include_router(access_token_router)
 
@@ -43,6 +57,9 @@ app.include_router(auto_logout_router)
 
 # 로그아웃
 app.include_router(logout_router)
+
+# 비밀번호 재설정
+app.include_router(reset_password_router)
 
 # 회원정보수정
 app.include_router(update_user_router)
