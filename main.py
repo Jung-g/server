@@ -17,7 +17,9 @@ from API.add_bookmark_router import router as add_bookmark_router
 from API.read_bookmark_router import router as read_bookmark_router
 from API.calendar_router import router as calendar_router
 from API.reset_password_router import router as reset_password_router
-
+from API.deleteuser_router import router as deleteuser_router
+from API.remove_bookmark_router import router as remove_bookmark_router
+# uvicorn main:app --host 0.0.0.0 --port 80 --log-level debug --reload
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
@@ -64,7 +66,10 @@ app.include_router(reset_password_router)
 # 회원정보수정
 app.include_router(update_user_router)
 
-# 사전
+# 회원탈퇴
+app.include_router(deleteuser_router)
+
+# 사전, 단어 뜻 보기
 app.include_router(dictionary_router)
 
 # 번역
@@ -73,8 +78,11 @@ app.include_router(translate_router)
 # 학습 코스 선택
 app.include_router(study_course_router)
 
-# 단어 북마크 추가/삭제
+# 단어 북마크 추가
 app.include_router(add_bookmark_router)
+
+# 단어 북마크 삭제
+app.include_router(remove_bookmark_router)
 
 # 단어 북마크 조회
 app.include_router(read_bookmark_router)

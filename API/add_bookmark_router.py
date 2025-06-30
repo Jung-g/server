@@ -1,27 +1,24 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from core_method import get_current_user_id, get_db
+from core_method import verify_or_refresh_token, get_db
 from models import BookMark
 
 router = APIRouter()
 
 class AddBookmarkRequest(BaseModel):
-    user_id: str
-    word_id: int
+    wid: int
 
 @router.post("/bookmark/add")
-async def add_bookmark(req: AddBookmarkRequest, db: Session = Depends(get_db)):
-    user_id = req.user_id
-    wid = req.word_id
-    bookmark = db.query(BookMark).filter_by(UserID=user_id, WID=wid).first()
+async def add_bookmark(req: AddBookmarkRequest, db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
+    wid = req.wid
+    exists = db.query(BookMark)\
+        .filter_by(UserID=user_id, WID=wid)\
+        .first()
+    if exists:
+        raise HTTPException(status_code=409, detail="이미 북마크된 단어입니다.")
 
-    if bookmark:
-        db.delete(bookmark)
-        db.commit()
-        return {"bookmarked": False}
-    else:
-        new_bookmark = BookMark(UserID=user_id, WID=wid)
-        db.add(new_bookmark)
-        db.commit()
-        return {"bookmarked": True}
+    new_bm = BookMark(UserID=user_id, WID=wid)
+    db.add(new_bm)
+    db.commit()
+    return {"success": True}

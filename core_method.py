@@ -39,9 +39,8 @@ def get_current_user_id(request: Request):
     except JWTError:
         raise HTTPException(status_code=401, detail="토큰이 유효하지 않습니다.")
 
+# 액세스 토큰 유효 여부 (미유효시 재발급)
 def verify_or_refresh_token(request: Request, response: Response) -> str:
-    print("verify_or_refresh_token 호출됨")
-
     auth_header = request.headers.get("Authorization")
     refresh_token = request.headers.get("X-Refresh-Token")
 
@@ -75,7 +74,6 @@ def verify_or_refresh_token(request: Request, response: Response) -> str:
     except JWTError as e3:
         print("access token 디코딩 실패:", e3)
         raise HTTPException(status_code=401, detail="액세스 토큰이 유효하지 않습니다.")
-
 
 # Access 토큰 생성
 def create_access_token(data: dict, expires_delta: timedelta = None):

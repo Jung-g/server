@@ -1,20 +1,20 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from core_method import get_current_user_id, get_db, pwd_context   
+from core_method import verify_or_refresh_token, get_db, pwd_context   
 from models import User
 
 router = APIRouter()
 
 class UserUpdate(BaseModel):
-    name: str = None
-    new_password: str = None
+    name: str | None = None
+    new_password: str | None = None
 
 @router.put("/user/update")
-async def update_user(update_data: UserUpdate, db: Session = Depends(get_db), user_id: str = Depends(get_current_user_id)):
+async def update_user(update_data: UserUpdate, db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     user = db.query(User).filter(User.UserID == user_id).first()
     if not user:
-        return {"success": False}
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
     updated = False
     if update_data.name:
@@ -26,6 +26,9 @@ async def update_user(update_data: UserUpdate, db: Session = Depends(get_db), us
 
     if updated:
         db.commit()
-        return {"success": True}
+        return {
+            "success": True,
+            "nickname": user.UserName
+        }
     else:
         return {"success": False}
