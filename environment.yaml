@@ -19,3 +19,6 @@ dependencies:
     - numpy
     - python-dateutil
     - python-multipart
+    - deepl
+    - opencv-python
+    - torch

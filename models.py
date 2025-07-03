@@ -69,7 +69,7 @@ class StudyRecord(Base):
     UserID = Column(String(256), ForeignKey("User.UserID"), primary_key=True)
     SID = Column(Integer, ForeignKey("Study.SID"), primary_key=True)
     Study_Date = Column(DateTime, primary_key=True)
-    # Complate = Column(Boolean)
+    Complate = Column(Boolean)
 
     user = relationship("User", back_populates="study_records")
     study = relationship("Study", back_populates="study_records")

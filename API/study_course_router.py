@@ -5,6 +5,11 @@ from core_method import get_db
 
 router = APIRouter()
 
+@router.get("/study/list")
+async def get_study_list(db: Session = Depends(get_db)):
+    studies = db.query(Study).all()
+    return [{"SID": s.SID, "Study_Course": s.Study_Course} for s in studies]
+
 @router.get("/study/course")
 async def get_course_detail(course_name: str = Query(..., description="학습 코스 이름"), db: Session = Depends(get_db)):
 

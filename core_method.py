@@ -19,7 +19,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 #JWT 초기 설정
 load_dotenv(dotenv_path="secret_key.env")
-SECRET_KEY = os.getenv("SECRET_KEY")  # 토큰 서명, 검증용 비밀 키 반드시 .env 파일로 분리
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256" # 암호화 알고리즘
 ACCESS_TOKEN_EXPIRE_MINUTES = 15 # 토큰 만료시간 (단위 : 분)
 
