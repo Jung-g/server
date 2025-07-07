@@ -7,14 +7,12 @@ router = APIRouter()
 
 @router.get("/study/calendar")
 async def get_study_records(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
-    records = db.query(StudyRecord).filter(StudyRecord.UserID == user_id).all()
-    
-    result = [
-        {
-            "date": record.Study_Date.isoformat(), # 이부분 하얀글씨 해결하기
-            "sid": record.SID
-        }
-        for record in records
-    ]
-    
+    records = (
+        db.query(StudyRecord)
+        .filter(StudyRecord.UserID == user_id, StudyRecord.Complate == True)
+        .all()
+    )
+
+    result = [record.Study_Date.date().isoformat() for record in records]
+
     return {"records": result}

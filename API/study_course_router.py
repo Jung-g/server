@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from models import Study, StudyWord, Word
+from models import Study, StudyStep, Word
 from core_method import get_db
 
 router = APIRouter()
@@ -12,16 +12,15 @@ async def get_study_list(db: Session = Depends(get_db)):
 
 @router.get("/study/course")
 async def get_course_detail(course_name: str = Query(..., description="학습 코스 이름"), db: Session = Depends(get_db)):
-
     study = db.query(Study).filter(Study.Study_Course == course_name).first()
     if not study:
         raise HTTPException(status_code=404, detail="해당 코스를 찾을 수 없습니다.")
 
-    words = (
-        db.query(StudyWord, Word)
-        .join(Word, StudyWord.WID == Word.WID)
-        .filter(StudyWord.SID == study.SID)
-        .order_by(StudyWord.Index)
+    steps = (
+        db.query(StudyStep, Word)
+        .join(Word, StudyStep.WID == Word.WID)
+        .filter(StudyStep.SID == study.SID)
+        .order_by(StudyStep.Step, StudyStep.WordOrder)
         .all()
     )
 
@@ -30,10 +29,11 @@ async def get_course_detail(course_name: str = Query(..., description="학습 �
         "title": study.Study_Course,
         "words": [
             {
-                "wid": w.WID,
-                "word": w.Word,
-                "index": sw.Index
+                "step": step.Step,
+                "word_order": step.WordOrder,
+                "wid": word.WID,
+                "word": word.Word,
             }
-            for sw, w in words
+            for step, word in steps
         ]
     }

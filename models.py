@@ -7,12 +7,13 @@ Base = declarative_base()
 # User 테이블
 class User(Base):
     __tablename__ = "User"
-    UserID = Column(String(256), primary_key=True)  # varchar(max)
+    UserID = Column(String(256), primary_key=True)
     PassWord = Column(String)
     UserName = Column(String)
 
     bookmarks = relationship("BookMark", back_populates="user")
     study_records = relationship("StudyRecord", back_populates="user")
+    token = relationship("Token", back_populates="user", uselist=False)
 
 # Word 테이블
 class Word(Base):
@@ -22,7 +23,7 @@ class Word(Base):
 
     animations = relationship("Animation", back_populates="word")
     bookmarks = relationship("BookMark", back_populates="word")
-    study_words = relationship("StudyWord", back_populates="word")
+    study_steps = relationship("StudyStep", back_populates="word")
     detail = relationship("WordDetail", uselist=False, back_populates="word")
 
 # WordDetail 테이블
@@ -33,7 +34,7 @@ class WordDetail(Base):
     Definition = Column(String, nullable=False)
     UpdatedTime  = Column(DateTime)
     
-    word        = relationship("Word", back_populates="detail")
+    word = relationship("Word", back_populates="detail")
 
 # Animation 테이블
 class Animation(Base):
@@ -50,25 +51,27 @@ class Study(Base):
     SID = Column(Integer, primary_key=True)
     Study_Course = Column(String)
 
-    study_words = relationship("StudyWord", back_populates="study")
+    study_steps = relationship("StudyStep", back_populates="study")
     study_records = relationship("StudyRecord", back_populates="study")
 
-# Study_word 테이블
-class StudyWord(Base):
-    __tablename__ = "Study_word"
+# Study_step 테이블
+class StudyStep(Base):
+    __tablename__ = "Study_step"
     SID = Column(Integer, ForeignKey("Study.SID"), primary_key=True)
+    Step = Column(Integer, primary_key=True)  # 학습 코스 내의 단계
     WID = Column(Integer, ForeignKey("Word.WID"), primary_key=True)
-    Index = Column(Integer)
+    WordOrder = Column(Integer, nullable=True)  # 단계 내의 단어 순서
 
-    study = relationship("Study", back_populates="study_words")
-    word = relationship("Word", back_populates="study_words")
+    study = relationship("Study", back_populates="study_steps")
+    word = relationship("Word", back_populates="study_steps")
 
 # Study_records 테이블
 class StudyRecord(Base):
     __tablename__ = "Study_records"
     UserID = Column(String(256), ForeignKey("User.UserID"), primary_key=True)
     SID = Column(Integer, ForeignKey("Study.SID"), primary_key=True)
-    Study_Date = Column(DateTime, primary_key=True)
+    Step = Column(Integer, primary_key=True)
+    Study_Date = Column(DateTime)
     Complate = Column(Boolean)
 
     user = relationship("User", back_populates="study_records")
@@ -92,4 +95,4 @@ class Token(Base):
     Refresh_token = Column(String(1024), unique=True)
     Expires = Column(DateTime)
 
-    user = relationship("User", backref="token")
+    user = relationship("User", back_populates="token")
