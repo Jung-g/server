@@ -65,6 +65,15 @@ class StudyStep(Base):
     study = relationship("Study", back_populates="study_steps")
     word = relationship("Word", back_populates="study_steps")
 
+# Study_StepMeta 테이블 (step 이름)
+class StudyStepMeta(Base):
+    __tablename__ = "Study_step_meta"
+    SID = Column(Integer, ForeignKey("Study.SID"), primary_key=True)
+    Step = Column(Integer, primary_key=True)
+    StepName = Column(String(256), nullable=False)
+
+    study = relationship("Study", backref="step_metas")
+
 # Study_records 테이블
 class StudyRecord(Base):
     __tablename__ = "Study_records"

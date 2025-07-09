@@ -7,6 +7,7 @@ import deepl
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from sqlalchemy.orm import Session
 from model.LSTM.LSTM import build_sequence_from_frames, predict_sign_language, result
+from model.LSTM.LSTM_sentence import run_sentence_model
 from model.LSTM.LSTM_video import run_model
 from models import Word
 from core_method import get_db, verify_or_refresh_token
@@ -29,23 +30,10 @@ async def translate_sign_to_text(request: Request, response: Response,file: Uplo
         tmp.write(await file.read())
         tmp_path = tmp.name
     print(tmp_path)
-    # cap = cv2.VideoCapture(tmp_path)
-    # frames = []
-    # while cap.isOpened():
-    #     ret, frame = cap.read()
-    #     if not ret:
-    #         break
-    #     frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    #     frames.append(frame)
-    # cap.release()
 
-    # if not frames:
-    #     raise HTTPException(status_code=400, detail="영상에서 프레임을 추출할 수 없습니다.")
-
-    # sequence = build_sequence_from_frames(frames)
-    # recognized_korean = predict_sign_language(sequence)
     recognized_korean = run_model(tmp_path)
-    # recognized_korean = result(frames, stride=5, threshold=3)
+    # recognized_korean = run_sentence_model(tmp_path)
+
     print("최종 예측 결과:", recognized_korean)
 
     # word = db.query(Word).filter(Word.Word == recognized_korean).first()

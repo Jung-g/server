@@ -21,6 +21,8 @@ def calculate_streak(dates: list[date]) -> int:
 def calculate_best_streak(dates: list[date]) -> int:
     if not dates:
         return 0
+    if len(dates) == 1:
+        return 1
 
     sorted_dates = sorted(set(dates))
     max_streak = 1
@@ -47,7 +49,7 @@ async def get_study_records(db: Session = Depends(get_db), user_id: str = Depend
     learned_dates = [d.isoformat() for d in date_list]
     streak_days = calculate_streak(date_list)
     best_streak = calculate_best_streak(date_list)
-
+    print(best_streak)
     return {
         "records": learned_dates,
         "streak_days": streak_days,
@@ -60,8 +62,7 @@ async def get_study_stats(db: Session = Depends(get_db), user_id: str = Depends(
         db.query(StudyRecord)
         .filter(
             StudyRecord.UserID == user_id,
-            StudyRecord.Complate == True,
-            StudyRecord.Step != 5
+            StudyRecord.Complate == True
         )
         .all()
     )
@@ -83,8 +84,16 @@ async def get_study_stats(db: Session = Depends(get_db), user_id: str = Depends(
 
     learned_words_count = len(word_ids)
 
+    completed_steps_by_sid = {}
+    for sid, step in sid_step_pairs:
+        completed_steps_by_sid.setdefault(sid, []).append(step)
+
+    for sid in completed_steps_by_sid:
+        completed_steps_by_sid[sid] = sorted(completed_steps_by_sid[sid])
+
     return {
         "learned_dates": learned_dates,
         "streak_days": streak_days,
-        "learned_words_count": learned_words_count
+        "learned_words_count": learned_words_count,
+        "completed_steps": completed_steps_by_sid
     }

@@ -22,3 +22,4 @@ dependencies:
     - deepl
     - opencv-python
     - torch
+    - pyctcdecode

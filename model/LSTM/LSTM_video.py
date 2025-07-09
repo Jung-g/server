@@ -2,10 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import torch
-import time
 import json
 import os
-from PIL import ImageFont, ImageDraw, Image
 from model.LSTM.utils import Vector_Normalization
 
 # VIDEO_FILE_PATH = "C:/Users/bit/Desktop/777.mp4" 
