@@ -1,3 +1,4 @@
+import time
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -15,11 +16,11 @@ def run_model(VIDEO_FILE_PATH: str) -> str:
     mp_hands = mp.solutions.hands
     pose = mp_pose.Pose(model_complexity=0, min_detection_confidence=0.5, min_tracking_confidence=0.5)
     hands = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
-
+    start = time.perf_counter()
     cap = cv2.VideoCapture(VIDEO_FILE_PATH)
     if not cap.isOpened():
         return "영상 파일 열기에 실패했습니다."
-
+    print("🔹 영상 열기 완료:", time.perf_counter() - start)
     # 설정 경로
     model_path = os.path.join(MODEL_DIR, "lstm_sign_language_model_scripted.pt")
     mean_path = os.path.join(MODEL_DIR, "data_mean.npy")
@@ -163,7 +164,7 @@ def run_model(VIDEO_FILE_PATH: str) -> str:
 
     cap.release()
     cv2.destroyAllWindows()
-
+    print("🔹 전체 분석 시간:", time.perf_counter() - start)
     if stable_prediction == "인식실패 다시 시도해주세요" or stable_confidence < 70:
         return "학습되지 않은 동작입니다"
 

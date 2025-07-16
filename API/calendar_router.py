@@ -37,6 +37,7 @@ def calculate_best_streak(dates: list[date]) -> int:
 
     return max_streak
 
+# 달력
 @router.get("/study/calendar")
 async def get_study_records(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     records = (
@@ -56,6 +57,7 @@ async def get_study_records(db: Session = Depends(get_db), user_id: str = Depend
         "best_streak": best_streak
     }
 
+# 달력 (홈 화면용)
 @router.get("/study/stats")
 async def get_study_stats(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     records = (

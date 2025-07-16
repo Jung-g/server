@@ -1,4 +1,6 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from pydantic import BaseModel
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from models import Study, StudyRecord, StudyStep, StudyStepMeta, Word
@@ -6,11 +8,13 @@ from core_method import get_db, verify_or_refresh_token
 
 router = APIRouter()
 
+# 학습 코스
 @router.get("/study/list")
 async def get_study_list(request: Request, response: Response, db: Session = Depends(get_db), _: str = Depends(verify_or_refresh_token)):
     studies = db.query(Study).all()
     return [{"SID": s.SID, "Study_Course": s.Study_Course} for s in studies]
 
+# 학습 코스의 세부사항
 @router.get("/study/course")
 async def get_course_detail(request: Request, response: Response, course_name: str = Query(..., description="학습 코스 이름"), db: Session = Depends(get_db), _: str = Depends(verify_or_refresh_token)):
     study = db.query(Study).filter(Study.Study_Course == course_name).first()
@@ -50,11 +54,9 @@ async def get_course_detail(request: Request, response: Response, course_name: s
         ]
     }
 
+# 학습 진행도(%)
 @router.get("/study/completion_rate")
-async def get_completion_rate(
-    db: Session = Depends(get_db),
-    user_id: str = Depends(verify_or_refresh_token)
-):
+async def get_completion_rate(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     from sqlalchemy import func
 
     # 전체 코스 개수
@@ -84,3 +86,35 @@ async def get_completion_rate(
         "completion_percent": round((completed_courses / total_courses) * 100, 1)
         if total_courses > 0 else 0.0
     }
+
+# 학습 완료
+class StudyCompleteRequest(BaseModel):
+    sid: int
+    step: int
+@router.post("/study/complete")
+async def complete_study(request: Request, response: Response, req: StudyCompleteRequest, db: Session = Depends(get_db)):
+    user_id = verify_or_refresh_token(request, response)
+
+    record = db.query(StudyRecord).filter_by(
+        UserID=user_id,
+        SID=req.sid,
+        Step=req.step
+    ).first()
+
+    now = datetime.now()
+
+    if record:
+        record.Complate = True
+        record.Study_Date = now
+    else:
+        record = StudyRecord(
+            UserID=user_id,
+            SID=req.sid,
+            Step=req.step,
+            Study_Date=now,
+            Complate=True
+        )
+        db.add(record)
+
+    db.commit()
+    return {"success": True}

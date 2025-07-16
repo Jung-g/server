@@ -14,6 +14,7 @@ load_dotenv(dotenv_path="dict_api_key.env")
 OPEN_DICT_KEY = os.getenv("OPEN_DICT_KEY")
 CERTKEY_NO = os.getenv("CERTKEY_NO")
 
+# db에 저장된 단어
 @router.get("/dictionary/words")
 async def get_words(request: Request, response: Response, query: str = Query(None), db: Session = Depends(get_db),):
     user_id = verify_or_refresh_token(request, response)
@@ -33,6 +34,7 @@ async def get_words(request: Request, response: Response, query: str = Query(Non
 
     return result
 
+# 단어 상세정보
 @router.get("/dictionary/words/detail")
 async def get_words_detail(wid: int = Query(..., description="Word의 WID"), db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     try:
