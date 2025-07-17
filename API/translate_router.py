@@ -4,7 +4,7 @@ import cv2
 from dotenv import load_dotenv
 import mediapipe as mp
 import deepl
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, Body
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile, Body
 from sqlalchemy.orm import Session
 from model.LSTM.LSTM import build_sequence_from_frames, predict_sign_language, result
 from model.LSTM.LSTM_sentence import run_sentence_model
@@ -50,7 +50,30 @@ VIDEO_DIR = "video"
 #         "chinese": chinese,
 #         "japanese": japanese
 #     }
+@router.post("/translate/sign_to_text")
+async def translate_sign_to_text(request: Request, response: Response, expected_word: str = Form(...), file: UploadFile = File(...), db: Session = Depends(get_db)):
+    user_id = verify_or_refresh_token(request, response)
 
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    predicted_word = run_model(tmp_path)
+    print("예측 결과:", predicted_word)
+    print("사용자 정답:", expected_word)
+
+    is_match = (predicted_word == expected_word)
+
+    if predicted_word in ['학습되지 않은 동작입니다', '인식실패 다시 시도해주세요']:
+        return {
+            "korean": predicted_word,
+            "match": False,
+        }
+
+    return {
+        "korean": predicted_word,
+        "match": is_match,
+    }
 
 
 # 텍스트 → 수어 애니메이션
