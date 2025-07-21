@@ -10,6 +10,25 @@ import json
 import os
 from PIL import ImageFont, ImageDraw, Image
 
+CONFIG = {
+        "VIDEO_FILE_PATH": "C:/Users/bit/Desktop/KakaoTalk_20250716_211352901.mp4",
+        "MODEL_DIR": "./model",
+        
+        # Word Model Parameters
+        "SEQ_LEN_WORD": 60,
+        "OVERLAP_LEN_WORD": 40,
+        "STABLE_THRESHOLD_WORD": 1,
+        "CONF_THRESHOLD_WORD": 0.89,
+        
+        # Fingerspelling Model Parameters
+        "SEQ_LEN_ALPHABET": 10,
+        "CONF_THRESHOLD_ALPHABET": 0.80,
+
+        # General Parameters
+        "IDLE_TIME_SECS": 2.5,
+        "MOVEMENT_THRESHOLD": 0.5,
+    }
+
 class FeatureExtractor:
     """
     Extracts pose and hand keypoints from video frames for sign language recognition.
@@ -450,24 +469,7 @@ class SignLanguageRecognizer:
 
 if __name__ == '__main__':
     # --- User Configuration ---
-    CONFIG = {
-        "VIDEO_FILE_PATH": "C:/Users/bit/Desktop/KakaoTalk_20250716_211352901.mp4",
-        "MODEL_DIR": "C:/Users/bit/Desktop",
-        
-        # Word Model Parameters
-        "SEQ_LEN_WORD": 60,
-        "OVERLAP_LEN_WORD": 40,
-        "STABLE_THRESHOLD_WORD": 1,
-        "CONF_THRESHOLD_WORD": 0.89,
-        
-        # Fingerspelling Model Parameters
-        "SEQ_LEN_ALPHABET": 10,
-        "CONF_THRESHOLD_ALPHABET": 0.80,
-
-        # General Parameters
-        "IDLE_TIME_SECS": 2.5,
-        "MOVEMENT_THRESHOLD": 0.5,
-    }
+    
 
     try:
         recognizer = SignLanguageRecognizer(CONFIG)

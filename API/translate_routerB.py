@@ -10,7 +10,8 @@ import cv2
 import base64
 
 # --- 💡 1. 새로운 OOP2 클래스와 CONFIG 임포트 ---
-from model.LSTM.LSTM_video_OOP2B import SignLanguageRecognizer, CONFIG # 파일 이름과 경로 확인!
+from model.LSTM.LSTM_video_OOP2B import SignLanguageRecognizer # 파일 이름과 경로 확인!
+from model.LSTM.LSTM_video_OOP2A import CONFIG # 파일 이름과 경로 확인!
 
 router = APIRouter()
 
@@ -55,7 +56,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
             print(f"User {user_id} recognized new word: {result}")
 
     # 새로 인식된 단어들을 클라이언트에 즉시 반환 (선택사항)
-    return {"status": "processing", "new_words": newly_recognized_words}
+    return {"status": "processing"}
 
 # --- 💡 4. `/translate/translate_latest` 엔드포인트 재구성 ---
 @router.get("/translate/translate_latest")

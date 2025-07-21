@@ -108,7 +108,7 @@ class FeatureExtractor:
 
         dynamic_word_features = np.concatenate([word_model_features, velocity, acceleration])
         
-        return dynamic_word_features, alphabet_feature, movement, num_hands
+        return dynamic_word_features, alphabet_feature, movement, num_hands_detected
 
     def close(self):
         self.pose.close()
