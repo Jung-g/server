@@ -39,6 +39,16 @@ async def get_course_detail(request: Request, response: Response, course_name: s
         .all()
     )
 
+    seen_steps = set()
+    steps_list = []
+    for (step, _, _, _, step_name) in steps:
+        if step not in seen_steps:
+            seen_steps.add(step)
+            steps_list.append({
+                "step": step,
+                "step_name": step_name
+            })
+
     return {
         "sid": study.SID,
         "title": study.Study_Course,
@@ -51,7 +61,8 @@ async def get_course_detail(request: Request, response: Response, course_name: s
                 "word": word,
             }
             for (step, word_order, wid, word, step_name) in steps
-        ]
+        ],
+        "steps": steps_list
     }
 
 # 학습 진행도(%)
