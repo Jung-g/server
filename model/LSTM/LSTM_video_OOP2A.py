@@ -11,7 +11,7 @@ import os
 from PIL import ImageFont, ImageDraw, Image
 
 CONFIG = {
-        "VIDEO_FILE_PATH": "C:/Users/bit/Desktop/KakaoTalk_20250716_211352901.mp4",
+        #"VIDEO_FILE_PATH": "C:/Users/bit/Desktop/KakaoTalk_20250716_211352901.mp4",
         "MODEL_DIR": "./model",
         
         # Word Model Parameters
@@ -264,9 +264,8 @@ class Predictor:
         self.word_buffer.clear()
         self.word_history.clear()
 
-
+""" 시각화부분 (필요없음)
 class Visualizer:
-    """Handles drawing text and results onto the video frame."""
     def __init__(self, font_path="C:/Windows/Fonts/malgunbd.ttf"):
         try:
             self.font = ImageFont.truetype(font_path, 30)
@@ -283,7 +282,7 @@ class Visualizer:
 
     # <--- 변경된 부분: 메소드 시그니처에 landmark 결과 추가 ---
     def draw(self, frame, prediction, confidence, sentence, buffer_status, results_pose, results_hands):
-        """Draws all informational text on the frame."""
+
         
         # <--- 변경된 부분: 랜드마크를 프레임에 먼저 그림 ---
         if results_pose and results_pose.pose_landmarks:
@@ -323,6 +322,8 @@ class Visualizer:
         
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
+"""
+
 
 class SignLanguageRecognizer:
     """
@@ -341,7 +342,7 @@ class SignLanguageRecognizer:
         # Initialize components
         self.feature_extractor = FeatureExtractor()
         self.predictor = Predictor(config)
-        self.visualizer = Visualizer()
+        #self.visualizer = Visualizer()
         
         # State variables
         self.sentence_words = []
@@ -371,8 +372,8 @@ class SignLanguageRecognizer:
                 return
             
             # 초기 화면은 랜드마크 없이 텍스트만 그림
-            buffer_status = f"Word Buf: 0/{self.config['SEQ_LEN_WORD']} | Alpha Buf: 0/{self.config['SEQ_LEN_ALPHABET']}"
-            display_frame = self.visualizer.draw(cv2.flip(frame, 1), None, 0.0, [], buffer_status, None, None)
+            #buffer_status = f"Word Buf: 0/{self.config['SEQ_LEN_WORD']} | Alpha Buf: 0/{self.config['SEQ_LEN_ALPHABET']}"
+            #display_frame = self.visualizer.draw(cv2.flip(frame, 1), None, 0.0, [], buffer_status, None, None)
 
 
             while self.video_cap.isOpened():
@@ -443,13 +444,13 @@ class SignLanguageRecognizer:
                 
                 # <--- 변경된 부분: 매 프레임마다 랜드마크와 텍스트를 다시 그림 ---
                 # 로직이 처리되지 않는 프레임에서는 이전 랜드마크 결과를 그대로 사용해 부드러운 화면을 보여줌
-                buffer_status = f"Word Buf: {len(self.predictor.word_buffer)}/{self.config['SEQ_LEN_WORD']} | Alpha Buf: {len(self.predictor.alphabet_buffer)}/{self.config['SEQ_LEN_ALPHABET']}"
-                display_frame = self.visualizer.draw(frame, self.current_prediction, self.current_confidence, self.sentence_words, buffer_status, results_pose, results_hands)
+                #buffer_status = f"Word Buf: {len(self.predictor.word_buffer)}/{self.config['SEQ_LEN_WORD']} | Alpha Buf: {len(self.predictor.alphabet_buffer)}/{self.config['SEQ_LEN_ALPHABET']}"
+                #display_frame = self.visualizer.draw(frame, self.current_prediction, self.current_confidence, self.sentence_words, buffer_status, results_pose, results_hands)
                 
-                cv2.imshow('Sign Language Recognition', display_frame)
-
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                
+                #cv2.imshow('Sign Language Recognition', display_frame)
+                #if cv2.waitKey(1) & 0xFF == ord('q'):
+                #    break
             
             final_result = " ".join(self.sentence_words)
             self.cleanup()
@@ -463,7 +464,7 @@ class SignLanguageRecognizer:
         
         self.feature_extractor.close()
         self.video_cap.release()
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
         print("--- Resources Released ---")
 
 
