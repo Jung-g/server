@@ -39,6 +39,9 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
 
         # Recognizer 실행 및 결과 반환
         predicted_word = recognizer.run()
+        
+        print(f"### 디버깅: recognizer.run()의 실제 반환값: '{predicted_word}' (타입: {type(predicted_word)}) ###")
+
 
         print("예측 결과:", predicted_word)
         print("사용자 정답:", expected_word)
