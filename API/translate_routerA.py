@@ -30,8 +30,7 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
 
     predicted_word = "인식 실패" # 기본값 설정
     try:
-        # --- 💡 2. 기존 run_model 호출을 새로운 Recognizer 클래스 사용으로 변경 ---
-        # OOP2에서 가져온 CONFIG 설정을 복사하고, 현재 영상 경로로 업데이트
+
         current_config = CONFIG.copy()
         current_config["VIDEO_FILE_PATH"] = video_path
 
@@ -39,7 +38,6 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
         recognizer = SignLanguageRecognizer(current_config)
 
         # Recognizer 실행 및 결과 반환
-        # (※ 중요: 이 코드가 작동하려면 OOP2.py의 run() 메소드 끝에 'return " ".join(self.sentence_words)'가 추가되어야 합니다.)
         predicted_word = recognizer.run()
 
         print("예측 결과:", predicted_word)
@@ -73,7 +71,10 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     user_id = verify_or_refresh_token(request, response)
     
     word = db.query(Word).filter(Word.Word == word_text).first()
-    # ... (이하 기존 코드와 동일) ...
+    
+    if not word:
+        raise HTTPException(status_code = 404, detail="단어가 존재하지 않습니다.")
+    
     clean_word = word.Word.strip().replace("'", "").replace('"', "")
     file_name = f"{clean_word}.mp4"
     file_path = os.path.join(VIDEO_DIR, file_name)
@@ -86,6 +87,7 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     return {
         "URL": video_url
     }
+
 
 # --- 💡 3. B 방식(프레임 스트림 처리) 관련 엔드포인트는 모두 삭제 ---
 # "/translate/analyze_frames" 와 "/translate/translate_latest" 는 A 방식만 사용하므로 삭제합니다.

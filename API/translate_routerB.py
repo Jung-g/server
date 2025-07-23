@@ -9,7 +9,9 @@ import numpy as np
 import cv2
 import base64
 
-# --- 💡 1. 새로운 OOP2 클래스와 CONFIG 임포트 ---
+from cachetools import TTLCache
+
+
 from model.LSTM.LSTM_video_OOP2B import SignLanguageRecognizer # 파일 이름과 경로 확인!
 from model.LSTM.LSTM_video_OOP2A import CONFIG # 파일 이름과 경로 확인!
 
@@ -20,7 +22,9 @@ AUTH_KEY = os.getenv("DEEPL_API_KEY")
 
 # --- 💡 2. 사용자별 Recognizer 객체를 저장할 딕셔너리 ---
 # { "user_id": SignLanguageRecognizer_instance } 형태로 저장됩니다.
-user_recognizers = {}
+#user_recognizers = {}
+user_recognizers = TTLCache(maxsize=100, ttl=300) 
+
 
 def decode_base64_to_numpy(base64_string: str) -> np.ndarray:
     """Base64 문자열을 OpenCV 이미지(Numpy 배열)로 디코딩합니다."""
