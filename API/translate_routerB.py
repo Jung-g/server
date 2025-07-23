@@ -72,6 +72,8 @@ async def translate_video_file(
         if not ret:
             break
         
+        frame = cv2.flip(frame, 1) 
+        
         # 각 프레임을 순서대로 분석합니다.
         # process_frame 내부에서 단어가 인식되면 recognizer의 sentence_words에 저장됩니다.
         recognizer.process_frame(frame)
@@ -116,6 +118,8 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         frame_np = decode_base64_to_numpy(base64_frame)
         if frame_np is None:
             continue
+        
+        frame_np = cv2.flip(frame_np, 1)
         
         # 프레임 하나를 처리하고, 새로 인식된 단어가 있으면 리스트에 추가
         result = recognizer.process_frame(frame_np)
