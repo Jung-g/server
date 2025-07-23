@@ -53,7 +53,7 @@ app.include_router(dictionary_router)
 
 # 번역
 # app.include_router(translate_router)
-#app.include_router(translate_routerA)
+app.include_router(translate_routerA)
 app.include_router(translate_routerB)
 
 # 학습 코스 선택
