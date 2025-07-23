@@ -75,6 +75,7 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     # Recognizer 객체에서 최종 문장 가져오기
     final_sentence = recognizer.get_full_sentence()
     
+    
     if not final_sentence:
         return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
 
