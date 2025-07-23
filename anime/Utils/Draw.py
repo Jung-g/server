@@ -1,5 +1,6 @@
 import os
 import cv2
+import base64
 import numpy as np
 import pandas as pd
 import mediapipe as mp
@@ -299,18 +300,20 @@ def api_draw(hand_df, pose_df, frame_dimensions, frame_len):
     frame_width, frame_height = frame_dimensions
 
     for frame_idx in range(frame_len):
-        # 1. 프레임 생성 (기존 코드와 동일)
+
         black_canvas = np.zeros((frame_height, frame_width, 3), dtype=np.uint8)
         
         draw_pose(black_canvas, pose_df, frame_dimensions, frame_idx)
         draw_hand(black_canvas, pose_df, hand_df, 'left', frame_dimensions, frame_idx)
         draw_hand(black_canvas, pose_df, hand_df, 'right', frame_dimensions, frame_idx)
 
-        # 2. 프레임을 파일에 쓰는 대신, JPEG 이미지로 인코딩
         (flag, encoded_image) = cv2.imencode(".jpg", black_canvas)
         if not flag:
             continue
 
-        # 3. 인코딩된 이미지를 HTTP multipart 형식에 맞춰 yield
-        yield (b'--frame\r\n' 
-               b'Content-Type: image/jpeg\r\n\r\n' + encoded_image.tobytes() + b'\r\n')
+        base64_bytes = base64.b64encode(encoded_image)
+        base64_string = base64_bytes.decode('utf-8')
+
+        yield base64_string
+        # yield (b'--frame\r\n' 
+        #        b'Content-Type: image/jpeg\r\n\r\n' + encoded_image.tobytes() + b'\r\n')
