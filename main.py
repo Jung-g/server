@@ -9,7 +9,7 @@ from API.login_router import router as login_router
 from API.logout_router import router as logout_router
 from API.study_course_router import router as study_course_router
 # from API.translate_router import router as translate_router
-#from API.translate_routerA import router as translate_routerA
+from API.translate_routerA import router as translate_routerA
 from API.translate_routerB import router as translate_routerB
 from API.user_router import router as user_router
 from API.bookmark_router import router as bookmark_router
