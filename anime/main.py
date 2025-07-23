@@ -60,7 +60,7 @@ def check_video(video_path):
         raise FileNotFoundError('동영상 파일이 존재하지 않습니다.')
     return video_names
 
-def main(video_path :str, is_out: bool, is_csv: bool):
+def made_video(video_path :str, is_out: bool, is_csv: bool):
     video_name = video_path.split('\\')[-1].split('.')[0]
     hands_original_data, pose_original_data, dims = linear_joint(video_path)
 
@@ -99,11 +99,11 @@ def run(video_path, is_out , is_log , is_csv):
         for idx in tqdm(range(len(video_names)) , desc= '진행률'): 
             if check_csv(video_names[idx]) and (is_csv == 'Y' or is_csv == 'y'):
                 continue
-            log_data = main(video_names[idx], is_out, is_csv)
+            log_data = made_video(video_names[idx], is_out, is_csv)
             if is_log == 'Y' or is_log == 'y':
                 write_log(log_data, idx + 1, is_csv)
     else:
-        log_data = main(video_path, is_out, is_csv)
+        log_data = made_video(video_path, is_out, is_csv)
         if is_log == 'Y':
             write_log(log_data, 1, is_csv)
 

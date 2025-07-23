@@ -1,7 +1,7 @@
 from fastapi import FastAPI , HTTPException
 from fastapi.responses import StreamingResponse
 
-from motion_merge import motion_merge, api_motion_merge
+from motion_merge import check_merge, api_motion_merge
 
 #region 레디스사용
 
@@ -32,7 +32,7 @@ async def stream_keypoints_video(words_json: str):
     for t in words:
         print(t)    
     try:
-        motion_data = motion_merge(words, send_type='api')
+        motion_data = check_merge(words, send_type='api')
     except Exception as e:
         raise HTTPException(
             status_code=500, 
@@ -40,6 +40,6 @@ async def stream_keypoints_video(words_json: str):
         )
     
     return StreamingResponse(
-            api_motion_merge(*motion_data),
-            media_type='multipart/x-mixed-replace; boundary=frame'
-        )
+        api_motion_merge(*motion_data),        
+        media_type='text/plain'
+    )

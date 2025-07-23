@@ -8,7 +8,7 @@ from Utils.Spline import *
 from Utils.Draw import create_keypoint_video, api_draw
 from Utils.Csv import search_data, search_id 
    
-def main(motion_data, output):
+def made_video(motion_data, output):
     hand_frame_df = []
     pose_frame_df = []
     
@@ -119,7 +119,7 @@ def api_motion_merge(motion_data, word_type : Literal['Word','Sentence']):
         hand_df, pose_df = motion_data
         return api_draw(hand_df , pose_df ,dims , frame_len=len(hand_df))
 
-def motion_merge(words, send_type : Literal['mp4','api'] = 'mp4'):
+def check_merge(words, send_type : Literal['mp4','api'] = 'mp4'):
     out_name = ''
     motion_data = []
     fail_name = []
@@ -152,7 +152,7 @@ def motion_merge(words, send_type : Literal['mp4','api'] = 'mp4'):
             return (motion_data, 'Sentence')
         elif send_type == 'mp4':
             if not os.path.exists(out_path):
-                main(motion_data, out_name)
+                made_video(motion_data, out_name)
             
         return out_path , fail_name
     else:
@@ -180,7 +180,7 @@ if __name__ == "__main__":
             raise ValueError('단어가 없습니다.')
 
     try:
-        video_path , fail_name = motion_merge(words)
+        video_path , fail_name = check_merge(words)
         print('영상이름: ',video_path)
         for fail in fail_name:
             print('없는단어: ',fail)
