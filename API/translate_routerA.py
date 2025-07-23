@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import deepl
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from sqlalchemy.orm import Session
-from models import Word
+from DB_Table import Word
 from core_method import get_db, verify_or_refresh_token
 
 # --- 💡 1. 불필요한 import 정리 및 새로운 클래스 추가 ---

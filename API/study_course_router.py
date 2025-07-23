@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
-from models import Study, StudyRecord, StudyStep, StudyStepMeta, Word
+from DB_Table import Study, StudyRecord, StudyStep, StudyStepMeta, Word
 from core_method import get_db, verify_or_refresh_token
 
 router = APIRouter()

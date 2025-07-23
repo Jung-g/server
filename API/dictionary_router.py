@@ -6,7 +6,7 @@ import httpx
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from core_method import get_db, verify_or_refresh_token
-from models import Word, WordDetail
+from DB_Table import Word, WordDetail
 
 router = APIRouter()
 
