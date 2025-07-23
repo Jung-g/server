@@ -288,7 +288,7 @@ class SignLanguageRecognizer:
             # ❗ 버퍼 초기화 전략 변경: 단어 버퍼만 리셋
             self.predictor.reset_word_buffer() 
 
-        elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.89):
+        elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.7):
             self.idle_counter = 0
             if not self.sentence_words or self.sentence_words[-1] != predicted_word:
                 self.sentence_words.append(predicted_word)
