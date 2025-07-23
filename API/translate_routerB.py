@@ -49,7 +49,7 @@ async def translate_video_file(
     번역된 텍스트를 즉시 반환하는 엔드포인트입니다.
     """
     # 1. 사용자 인증
-    #user_id = verify_or_refresh_token(request, response)
+    user_id = verify_or_refresh_token(request, response)
 
     # 2. 업로드된 비디오 파일을 임시 파일로 저장
     # OpenCV가 파일 경로로 영상을 읽기 때문에 임시 파일 생성이 필요합니다.
