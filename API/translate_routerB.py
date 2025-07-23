@@ -8,6 +8,8 @@ from typing import List
 import numpy as np
 import cv2
 import base64
+import tempfile
+from fastapi import File, UploadFile
 
 from cachetools import TTLCache
 
@@ -34,6 +36,68 @@ def decode_base64_to_numpy(base64_string: str) -> np.ndarray:
         return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     except Exception:
         return None
+
+@router.post("/translate/sign_to_text")
+async def translate_video_file(
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...)
+):
+    """
+    클라이언트가 보낸 비디오 파일 전체를 한 번에 받아 처리하고,
+    번역된 텍스트를 즉시 반환하는 엔드포인트입니다.
+    """
+    # 1. 사용자 인증
+    #user_id = verify_or_refresh_token(request, response)
+
+    # 2. 업로드된 비디오 파일을 임시 파일로 저장
+    # OpenCV가 파일 경로로 영상을 읽기 때문에 임시 파일 생성이 필요합니다.
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+        contents = await file.read()
+        temp_video.write(contents)
+        temp_video_path = temp_video.name
+
+    # 3. 요청마다 새로운 Recognizer 인스턴스 생성
+    # 이 방식은 상태를 공유하지 않으므로, 각 요청을 독립적으로 처리합니다.
+    recognizer = SignLanguageRecognizer(CONFIG)
+    
+    # 4. 비디오 파일 처리
+    cap = cv2.VideoCapture(temp_video_path)
+    if not cap.isOpened():
+        raise HTTPException(status_code=500, detail="비디오 파일을 열 수 없습니다.")
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        # 각 프레임을 순서대로 분석합니다.
+        # process_frame 내부에서 단어가 인식되면 recognizer의 sentence_words에 저장됩니다.
+        recognizer.process_frame(frame)
+    
+    cap.release()
+    os.unlink(temp_video_path) # 임시 파일 삭제
+
+    # 5. 최종 문장 가져오기
+    final_sentence = recognizer.get_full_sentence()
+    
+    if not final_sentence:
+        return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
+
+    # 6. DeepL 번역 및 결과 반환
+    try:
+        translator = deepl.Translator(AUTH_KEY)
+        result = {
+            "korean": final_sentence,
+            "english": translator.translate_text(final_sentence, target_lang="EN-US").text,
+            "japanese": translator.translate_text(final_sentence, target_lang="JA").text,
+            "chinese": translator.translate_text(final_sentence, target_lang="ZH").text,
+        }
+        return result
+    except Exception as e:
+        # DeepL API 등에서 오류가 발생할 경우
+        raise HTTPException(status_code=500, detail=f"번역 중 오류 발생: {str(e)}")
 
 # --- 💡 3. `/analyze_frames` 엔드포인트 재구성 ---
 @router.post("/translate/analyze_frames")
