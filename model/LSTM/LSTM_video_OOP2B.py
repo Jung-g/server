@@ -10,11 +10,7 @@ import json
 import os
 from PIL import ImageFont, ImageDraw, Image
 
-# FeatureExtractor, Predictor, Visualizer 클래스는 기존과 동일하게 사용합니다.
-# (이전 파일에 있던 코드를 그대로 여기에 붙여넣으시면 됩니다.)
-# ... FeatureExtractor 클래스 코드 ...
-# ... Predictor 클래스 코드 ...
-# ... Visualizer 클래스 코드 ...
+
 class FeatureExtractor:
     """
     Extracts pose and hand keypoints from video frames for sign language recognition.
