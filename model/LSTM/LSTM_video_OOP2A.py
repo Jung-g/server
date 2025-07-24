@@ -14,10 +14,10 @@ CONFIG = {
         #"VIDEO_FILE_PATH": "C:/Users/bit/Desktop/KakaoTalk_20250716_211352901.mp4",
         "MODEL_DIR": "./model",
         
-        "SEQ_LEN_WORD": 45,
+        "SEQ_LEN_WORD": 30,
         #"OVERLAP_LEN_WORD": 40,
         "STABLE_THRESHOLD_WORD": 1,
-        "CONF_THRESHOLD_WORD": 0.89,
+        "CONF_THRESHOLD_WORD": 0.7,
         
         "SEQ_LEN_ALPHABET": 10,
         "CONF_THRESHOLD_ALPHABET": 0.80,

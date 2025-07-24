@@ -1,8 +1,9 @@
-from datetime import datetime
 import os
+import httpx
+import traceback
+from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-import httpx
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from anime.motion_merge import api_motion_merge, check_merge
@@ -136,6 +137,5 @@ async def get_words_detail(wid: int = Query(..., description="Word의 WID"), db:
         }
 
     except Exception:
-        import traceback
         print("예외 발생:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="서버 내부 오류 발생")
