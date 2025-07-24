@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 import httpx
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
 from DB_Table import Word, WordDetail
 
@@ -104,10 +105,20 @@ async def get_words_detail(wid: int = Query(..., description="Word의 WID"), db:
         db.add(new_detail)
         db.commit()
 
+        try:
+            motion_data = check_merge([word_text], send_type='api')  # 단어 1개를 리스트로
+            frame_generator = api_motion_merge(*motion_data)
+            frame_list = list(frame_generator)  # base64 인코딩된 str 리스트
+        except Exception as e:
+            print("[ERROR] 프레임 생성 실패:", e)
+            traceback.print_exc()
+            frame_list = []
+
         return {
             "word": word_text,
             "pos": pos,
             "definition": definition,
+            "frames": frame_list
         }
 
     except Exception:

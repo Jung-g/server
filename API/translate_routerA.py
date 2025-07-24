@@ -86,7 +86,7 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     try:
         motion_data = check_merge(words, send_type='api')
     except Exception as e:
-        print("[❌ ERROR] check_merge 에러 발생:", e)
+        print("[ERROR] check_merge 에러 발생:", e)
         traceback.print_exc()
         raise HTTPException(
             status_code=500, 
