@@ -235,8 +235,9 @@ class SignLanguageRecognizer:
         self.idle_counter = 0
         self.HAND_HISTORY_LENGTH = 15 
         self.hand_presence_history = deque(maxlen=self.HAND_HISTORY_LENGTH)
-        # IDLE_TIME_THRESHOLD_FRAMES는 고정값 혹은 FPS 기반으로 설정 (예: 30fps 기준 2.5초 = 75프레임)
-        self.IDLE_TIME_THRESHOLD_FRAMES = 75 
+        fps = 30 
+        self.IDLE_TIME_THRESHOLD_FRAMES = int(self.config['IDLE_TIME_SECS'] * fps)
+        
 
     def reset(self):
         """인식기 상태를 완전히 초기화합니다."""
