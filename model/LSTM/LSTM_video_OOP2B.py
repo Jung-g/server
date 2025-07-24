@@ -215,6 +215,13 @@ class Predictor:
 
         return None, 0.0
     
+    
+    def reset_word_buffer(self):
+        """Resets only the word prediction buffer and history."""
+        self.word_buffer.clear()
+        self.word_history.clear()
+        
+        
     def reset(self):
         """Resets all buffers and histories."""
         self.word_buffer.clear()
@@ -223,12 +230,6 @@ class Predictor:
         self.alphabet_confirm_buffer.clear()
         self.last_confirmed_alphabet = None
 
-    def reset_word_buffer(self):
-        """Resets only the word buffer."""
-        self.word_buffer.clear()
-        self.word_history.clear()
-        
-        
 # --- 💡 1. `SignLanguageRecognizer` 클래스 대폭 수정 ---
 class SignLanguageRecognizer:
     def __init__(self, config):
@@ -244,7 +245,7 @@ class SignLanguageRecognizer:
         fps = 30 
         self.IDLE_TIME_THRESHOLD_FRAMES = int(self.config['IDLE_TIME_SECS'] * fps)
         
-
+        
     def reset(self):
         """인식기 상태를 완전히 초기화합니다."""
         print("--- Recognizer state has been reset. ---")
@@ -256,6 +257,7 @@ class SignLanguageRecognizer:
     def process_frame(self, frame):
         """
         단일 프레임을 받아 처리하고, 새로운 단어가 인식되면 해당 단어를 반환합니다.
+        (수정된 최종 버전)
         """
         word_feats, alphabet_feats, movement, num_hands = self.feature_extractor.extract(frame)
         self.hand_presence_history.append(num_hands)
@@ -266,36 +268,42 @@ class SignLanguageRecognizer:
         else:
             self.idle_counter = 0
         
-        # 일정 시간 움직임 없으면 문장 초기화
+        # 일정 시간 움직임 없으면 Recognizer 전체 상태를 초기화
         if self.idle_counter >= self.IDLE_TIME_THRESHOLD_FRAMES:
             if self.sentence_words:
-                print(f"IDLE - Resetting sentence: {' '.join(self.sentence_words)}")
+                 print(f"IDLE - Resetting sentence: {' '.join(self.sentence_words)}")
             self.reset()
             return None # 유휴 상태이므로 아무것도 반환 안 함
 
+        # --- ✨ 핵심 로직: 신뢰도 기반으로 단어/지문자 판정 ---
         predicted_word, word_conf = self.predictor.predict_word(word_feats)
         predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
 
         newly_recognized_token = None
 
-        # 원본의 우세 판정 로직 적용
-        # 지문자 신뢰도가 0.8 이상이고, 단어 신뢰도보다 0.1(10%) 이상 높을 때만 지문자로 인정
+        # 지문자 신뢰도가 단어 신뢰도보다 0.1(10%) 이상 높을 때만 지문자로 인정
         if predicted_alphabet and alphabet_conf > self.config.get('CONF_THRESHOLD_ALPHABET', 0.8) and alphabet_conf > word_conf + 0.1:
-            self.idle_counter = 0
+            self.idle_counter = 0 # 움직임으로 간주
             if not self.sentence_words or self.sentence_words[-1] != predicted_alphabet:
                 self.sentence_words.append(predicted_alphabet)
                 newly_recognized_token = predicted_alphabet
-            
-            # ❗ 버퍼 초기화 전략 변경: 단어 버퍼만 리셋
+                
             self.predictor.reset_word_buffer() 
 
-        elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.7):
-            self.idle_counter = 0
+            
+            # ❗ 올바른 버퍼 초기화: 단어 버퍼만 리셋하여 지문자 연속 인식을 유지
+            self.predictor.reset_word_buffer() 
+
+        elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.89):
+            self.idle_counter = 0 # 움직임으로 간주
             if not self.sentence_words or self.sentence_words[-1] != predicted_word:
                 self.sentence_words.append(predicted_word)
                 newly_recognized_token = predicted_word
+                
+            self.predictor.reset_word_buffer()
 
-            # ❗ 버퍼 초기화 전략 변경: 단어 버퍼만 리셋
+
+            # ❗ 올바른 버퍼 초기화: 단어 버퍼만 리셋
             self.predictor.reset_word_buffer()
 
         return newly_recognized_token # 새로 인식된 단어/지문자 반환 (없으면 None)

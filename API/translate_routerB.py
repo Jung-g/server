@@ -49,7 +49,7 @@ async def translate_video_file(
     번역된 텍스트를 즉시 반환하는 엔드포인트입니다.
     """
     # 1. 사용자 인증
-    user_id = verify_or_refresh_token(request, response)
+    #user_id = verify_or_refresh_token(request, response)
 
     # 2. 업로드된 비디오 파일을 임시 파일로 저장
     # OpenCV가 파일 경로로 영상을 읽기 때문에 임시 파일 생성이 필요합니다.
@@ -71,8 +71,6 @@ async def translate_video_file(
         ret, frame = cap.read()
         if not ret:
             break
-        
-        frame = cv2.flip(frame, 1) 
         
         # 각 프레임을 순서대로 분석합니다.
         # process_frame 내부에서 단어가 인식되면 recognizer의 sentence_words에 저장됩니다.
@@ -110,6 +108,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
     if user_id not in user_recognizers:
         print(f"--- New recognizer created for user: {user_id} ---")
         user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
+
     
     recognizer = user_recognizers[user_id]
     
@@ -120,6 +119,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
             continue
         
         frame_np = cv2.flip(frame_np, 1)
+
         
         # 프레임 하나를 처리하고, 새로 인식된 단어가 있으면 리스트에 추가
         result = recognizer.process_frame(frame_np)
