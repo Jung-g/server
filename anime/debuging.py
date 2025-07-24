@@ -3,9 +3,9 @@ import sys
 import argparse
 from tqdm import tqdm 
 
-from Utils.Spline import *
-from Utils.Interpolation import Detect_joint
-from Utils.Draw import linear_joint, create_keypoint_debug
+from .Utils.Spline import *
+from .Utils.Interpolation import Detect_joint
+from .Utils.Draw import linear_joint, create_keypoint_debug
 
 
 def debug_check_video(video_path):

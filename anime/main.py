@@ -3,10 +3,10 @@ import sys
 import argparse
 from tqdm import tqdm
 
-from Utils.Draw import *
-from Utils.Spline import *
-from Utils.Csv import insert_csv, check_csv
-from Utils.Interpolation import Detect_joint
+from .Utils.Draw import *
+from .Utils.Spline import *
+from .Utils.Csv import insert_csv, check_csv
+from .Utils.Interpolation import Detect_joint
 
 def write_log(log_data, idx, is_csv):
     sus, loss_info_tuple = log_data

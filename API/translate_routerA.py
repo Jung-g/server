@@ -68,7 +68,7 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
         "match": is_match,
     }
 
-
+import traceback
 # --- 텍스트 → 수어 (기존 코드 유지) ---
 @router.get("/translate/text_to_sign")
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
@@ -77,7 +77,8 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
 
     # mBERT 이용해서 문장 -> list
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-    words = []
+    # words = []
+    words = word_text.strip().split()
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     
     from anime.motion_merge import check_merge, api_motion_merge
@@ -85,6 +86,8 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     try:
         motion_data = check_merge(words, send_type='api')
     except Exception as e:
+        print("[❌ ERROR] check_merge 에러 발생:", e)
+        traceback.print_exc()
         raise HTTPException(
             status_code=500, 
             detail=f'{e}' # 클라이언트에게 보여줄 메시지

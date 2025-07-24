@@ -4,9 +4,9 @@ import argparse
 import pandas as pd
 from typing import Literal
 
-from Utils.Spline import *
-from Utils.Draw import create_keypoint_video, api_draw
-from Utils.Csv import search_data, search_id 
+from .Utils.Spline import *
+from .Utils.Draw import create_keypoint_video, api_draw
+from .Utils.Csv import search_data, search_id 
    
 def made_video(motion_data, output):
     hand_frame_df = []
