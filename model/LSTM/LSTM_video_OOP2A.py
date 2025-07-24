@@ -14,19 +14,16 @@ CONFIG = {
         #"VIDEO_FILE_PATH": "C:/Users/bit/Desktop/KakaoTalk_20250716_211352901.mp4",
         "MODEL_DIR": "./model",
         
-        # Word Model Parameters
-        "SEQ_LEN_WORD": 60,
-        "OVERLAP_LEN_WORD": 40,
+        "SEQ_LEN_WORD": 45,
+        #"OVERLAP_LEN_WORD": 40,
         "STABLE_THRESHOLD_WORD": 1,
         "CONF_THRESHOLD_WORD": 0.89,
         
-        # Fingerspelling Model Parameters
         "SEQ_LEN_ALPHABET": 10,
         "CONF_THRESHOLD_ALPHABET": 0.80,
 
-        # General Parameters
-        "IDLE_TIME_SECS": 2.5,
-        "MOVEMENT_THRESHOLD": 0.5,
+        "IDLE_TIME_SECS": 1.8,
+        "MOVEMENT_THRESHOLD": 0.6,
     }
 
 class FeatureExtractor:
@@ -403,54 +400,36 @@ class SignLanguageRecognizer:
                             print(f"Final Sentence (due to inactivity): {' '.join(self.sentence_words)}")
                         self.sentence_words.clear()
                         self.predictor.reset_word_buffer()
-                        self.idle_counter = 0
+                        self.idle_counter = 0 
                         
-                    # <--- ✨ 핵심 로직 변경 ✨ ---
-                    # "최근에 두 손이 감지된 적이 있었는가?"를 확인
-                    # hand_presence_history에 2(두 손)가 하나라도 있으면 True
-                    #is_likely_word_gesture = any(h == 2 for h in self.hand_presence_history)
-                    is_likely_word_gesture = self.hand_presence_history.count(2) > (self.HAND_HISTORY_LENGTH // 2)
+                    predicted_word, word_conf = self.predictor.predict_word(word_feats)
+                    predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
 
-                    predicted_alphabet, alphabet_conf = None, 0.0
-                    
-                    # 만약 최근 두 손이 감지된 적이 없거나, 오른손 특징(alphabet_feats)이 존재할 때만 지문자 예측 시도
-                    if not is_likely_word_gesture and alphabet_feats is not None:
-                        predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
-                    
-                    if predicted_alphabet:
+                    # 지문자 신뢰도가 0.8 이상이고, 단어 신뢰도보다 0.1(10%) 이상 높을 때만 지문자로 인정
+                    if predicted_alphabet and alphabet_conf > self.config.get('CONF_THRESHOLD_ALPHABET', 0.8) and alphabet_conf > word_conf + 0.1:
                         self.idle_counter = 0
                         self.current_prediction = predicted_alphabet
                         self.current_confidence = alphabet_conf * 100
-                        
+
                         if not self.sentence_words or self.sentence_words[-1] != predicted_alphabet:
                             self.sentence_words.append(predicted_alphabet)
                             print(f"Fingerspelling Appended: {predicted_alphabet} | Current Sentence: {' '.join(self.sentence_words)}")
-                        
+
                         self.predictor.reset_word_buffer()
 
-                    else:
-                        predicted_word, word_conf = self.predictor.predict_word(word_feats)
-                        if predicted_word:
-                            self.idle_counter = 0
-                            self.current_prediction = predicted_word
-                            self.current_confidence = word_conf * 100
+                    elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.89): # CONF_THRESHOLD_WORD는 CONFIG 값 참조
+                        self.idle_counter = 0
+                        self.current_prediction = predicted_word
+                        self.current_confidence = word_conf * 100
 
-                            if not self.sentence_words or self.sentence_words[-1] != predicted_word:
-                                self.sentence_words.append(predicted_word)
-                                print(f"Word Appended: {predicted_word} | Current Sentence: {' '.join(self.sentence_words)}")
-                                
-                                self.predictor.reset_word_buffer()
+                        if not self.sentence_words or self.sentence_words[-1] != predicted_word:
+                            self.sentence_words.append(predicted_word)
+                            print(f"Word Appended: {predicted_word} | Current Sentence: {' '.join(self.sentence_words)}")
+
+                        self.predictor.reset_word_buffer()
 
                 
-                # <--- 변경된 부분: 매 프레임마다 랜드마크와 텍스트를 다시 그림 ---
-                # 로직이 처리되지 않는 프레임에서는 이전 랜드마크 결과를 그대로 사용해 부드러운 화면을 보여줌
-                #buffer_status = f"Word Buf: {len(self.predictor.word_buffer)}/{self.config['SEQ_LEN_WORD']} | Alpha Buf: {len(self.predictor.alphabet_buffer)}/{self.config['SEQ_LEN_ALPHABET']}"
-                #display_frame = self.visualizer.draw(frame, self.current_prediction, self.current_confidence, self.sentence_words, buffer_status, results_pose, results_hands)
-                
-                
-                #cv2.imshow('Sign Language Recognition', display_frame)
-                #if cv2.waitKey(1) & 0xFF == ord('q'):
-                #    break
+
             
             final_result = " ".join(self.sentence_words)
             self.cleanup()
