@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from DB_Table import Word
 from core_method import get_db, verify_or_refresh_token
+from anime.motion_merge import check_merge, api_motion_merge
 
 # --- 💡 1. 불필요한 import 정리 및 새로운 클래스 추가 ---
 # 기존의 run_model, LSTM_frame 등을 모두 지우고 OOP2의 클래스를 가져옵니다.
@@ -80,8 +81,6 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     # words = []
     words = word_text.strip().split()
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-    
-    from anime.motion_merge import check_merge, api_motion_merge
     
     try:
         motion_data = check_merge(words, send_type='api')
