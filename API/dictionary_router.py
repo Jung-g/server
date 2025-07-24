@@ -46,10 +46,24 @@ async def get_words_detail(wid: int = Query(..., description="Word의 WID"), db:
 
         detail = db.query(WordDetail).get(wid)
         if detail:
+            word_text = word_obj.Word.strip()
+            pos = detail.Pos
+            definition = detail.Definition
+
+            try:
+                motion_data = check_merge([word_text], send_type='api')
+                frame_generator = api_motion_merge(*motion_data)
+                frame_list = list(frame_generator)
+            except Exception as e:
+                print("[ERROR] 프레임 생성 실패:", e)
+                traceback.print_exc()
+                frame_list = []
+
             return {
                 "word": word_text,
-                "pos": detail.Pos,
-                "definition": detail.Definition,
+                "pos": pos,
+                "definition": definition,
+                "frames": frame_list
             }
 
         if not OPEN_DICT_KEY:
@@ -106,7 +120,7 @@ async def get_words_detail(wid: int = Query(..., description="Word의 WID"), db:
         db.commit()
 
         try:
-            motion_data = check_merge([word_text], send_type='api')  # 단어 1개를 리스트로
+            motion_data = check_merge([word_text], send_type='api')
             frame_generator = api_motion_merge(*motion_data)
             frame_list = list(frame_generator)  # base64 인코딩된 str 리스트
         except Exception as e:

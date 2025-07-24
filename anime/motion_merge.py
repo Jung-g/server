@@ -82,7 +82,7 @@ def cutting_frame(motion , standard = 0.8, motion_type : Literal['start', 'middl
     return piece_hand, piece_pose
 
 def api_motion_merge(motion_data, word_type : Literal['Word','Sentence']):
-    dims = (1980,1020)
+    dims = (1400,1050)
     
     if word_type == 'Sentence':
         hand_frame_df = []
