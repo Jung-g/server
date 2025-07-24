@@ -108,6 +108,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
     if user_id not in user_recognizers:
         print(f"--- New recognizer created for user: {user_id} ---")
         user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
+
     
     recognizer = user_recognizers[user_id]
     
@@ -116,6 +117,9 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         frame_np = decode_base64_to_numpy(base64_frame)
         if frame_np is None:
             continue
+        
+        frame_np = cv2.flip(frame_np, 1)
+
         
         # 프레임 하나를 처리하고, 새로 인식된 단어가 있으면 리스트에 추가
         result = recognizer.process_frame(frame_np)

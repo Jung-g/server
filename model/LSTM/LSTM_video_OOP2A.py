@@ -22,7 +22,7 @@ CONFIG = {
         "SEQ_LEN_ALPHABET": 10,
         "CONF_THRESHOLD_ALPHABET": 0.80,
 
-        "IDLE_TIME_SECS": 1.8,
+        "IDLE_TIME_SECS": 2.5,
         "MOVEMENT_THRESHOLD": 0.6,
     }
 
@@ -353,97 +353,84 @@ class SignLanguageRecognizer:
 
 
     def run(self):
-            """Starts the main recognition loop."""
-            print(f"\n--- Starting Sign Language Recognition ---")
-            print(f"Device: {self.predictor.device}")
+        """Starts the main recognition loop."""
+        print(f"\n--- Starting Sign Language Recognition ---")
+        print(f"Device: {self.predictor.device}")
 
-            frame_process_counter = 0
-            
-            # <--- 변경된 부분: 랜드마크 결과를 저장할 변수 추가 ---
-            results_pose, results_hands = None, None
-
+        # ✨ 1. 최종 문장을 담을 리스트 (이 부분은 올바르게 작성하셨습니다)
+        final_sentence_parts = []
+        
+        frame_process_counter = 0
+        
+        # ✨ 2. while 루프가 비디오의 모든 프레임을 순회하도록 구조를 바로잡습니다.
+        while self.video_cap.isOpened():
             ret, frame = self.video_cap.read()
             if not ret:
-                print("오류: 비디오 파일을 읽을 수 없습니다. 경로를 확인해 주세요.")
-                self.cleanup()
-                return
+                print("End of video file reached.")
+                break # 루프를 올바르게 종료합니다.
             
-            # 초기 화면은 랜드마크 없이 텍스트만 그림
-            #buffer_status = f"Word Buf: 0/{self.config['SEQ_LEN_WORD']} | Alpha Buf: 0/{self.config['SEQ_LEN_ALPHABET']}"
-            #display_frame = self.visualizer.draw(cv2.flip(frame, 1), None, 0.0, [], buffer_status, None, None)
+            frame = cv2.flip(frame, 1)
+            frame_process_counter += 1
 
-
-            while self.video_cap.isOpened():
-                ret, frame = self.video_cap.read()
-                if not ret:
-                    print("End of video file reached.")
-                    break
+            # ✨ 3. 모든 인식 로직은 while 루프 안에서, 2프레임 당 한 번씩 실행되도록 합니다.
+            if frame_process_counter % 2 == 0:
+                word_feats, alphabet_feats, movement, _, _, _ = self.feature_extractor.extract(frame)
                 
-                frame = cv2.flip(frame, 1)
-                frame_process_counter += 1
+                # 움직임 감지 및 idle_counter 업데이트
+                if movement < self.config['MOVEMENT_THRESHOLD']:
+                    self.idle_counter += 1
+                else:
+                    self.idle_counter = 0
 
-                if frame_process_counter % 2 == 0:
-                    # <--- 변경된 부분: 특징 추출시 랜드마크 결과도 함께 받음 ---
-                    #word_feats, alphabet_feats, movement, results_pose, results_hands = self.feature_extractor.extract(frame)
-                    word_feats, alphabet_feats, movement, results_pose, results_hands, num_hands = self.feature_extractor.extract(frame)
-                    
-                    # <--- 변경된 부분: 손 감지 기록 버퍼 업데이트 ---
-                    self.hand_presence_history.append(num_hands)
-
-                    if movement < self.config['MOVEMENT_THRESHOLD']:
-                        self.idle_counter += 1
-                    else:
-                        self.idle_counter = 0
-                    
-                    if self.idle_counter >= self.IDLE_TIME_THRESHOLD_FRAMES:
-                        if self.sentence_words:
-                            print(f"Final Sentence (due to inactivity): {' '.join(self.sentence_words)}")
+                # 비활성 감지 로직
+                if self.idle_counter >= self.IDLE_TIME_THRESHOLD_FRAMES:
+                    if self.sentence_words:
+                        current_phrase = ' '.join(self.sentence_words)
+                        print(f"Phrase detected (due to inactivity): {current_phrase}")
+                        final_sentence_parts.append(current_phrase)
                         self.sentence_words.clear()
-                        self.predictor.reset_word_buffer()
-                        self.idle_counter = 0 
-                        
-                    predicted_word, word_conf = self.predictor.predict_word(word_feats)
-                    predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
-
-                    # 지문자 신뢰도가 0.8 이상이고, 단어 신뢰도보다 0.1(10%) 이상 높을 때만 지문자로 인정
-                    if predicted_alphabet and alphabet_conf > self.config.get('CONF_THRESHOLD_ALPHABET', 0.8) and alphabet_conf > word_conf + 0.1:
-                        self.idle_counter = 0
-                        self.current_prediction = predicted_alphabet
-                        self.current_confidence = alphabet_conf * 100
-
-                        if not self.sentence_words or self.sentence_words[-1] != predicted_alphabet:
-                            self.sentence_words.append(predicted_alphabet)
-                            print(f"Fingerspelling Appended: {predicted_alphabet} | Current Sentence: {' '.join(self.sentence_words)}")
-
-                        self.predictor.reset_word_buffer()
-
-                    elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.89): # CONF_THRESHOLD_WORD는 CONFIG 값 참조
-                        self.idle_counter = 0
-                        self.current_prediction = predicted_word
-                        self.current_confidence = word_conf * 100
-
-                        if not self.sentence_words or self.sentence_words[-1] != predicted_word:
-                            self.sentence_words.append(predicted_word)
-                            print(f"Word Appended: {predicted_word} | Current Sentence: {' '.join(self.sentence_words)}")
-
-                        self.predictor.reset_word_buffer()
-
+                    self.predictor.reset_word_buffer()
+                    self.idle_counter = 0
                 
+                # 단어/지문자 인식 및 추가 로직
+                predicted_word, word_conf = self.predictor.predict_word(word_feats)
+                predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
+
+                if predicted_alphabet and alphabet_conf > self.config['CONF_THRESHOLD_ALPHABET'] and alphabet_conf > word_conf + 0.1:
+                    self.idle_counter = 0
+                    if not self.sentence_words or self.sentence_words[-1] != predicted_alphabet:
+                        self.sentence_words.append(predicted_alphabet)
+                        print(f"Fingerspelling Appended: {predicted_alphabet} | Current Sentence: {' '.join(self.sentence_words)}")
+                    self.predictor.reset_word_buffer()
+
+                elif predicted_word and word_conf > self.config['CONF_THRESHOLD_WORD']:
+                    self.idle_counter = 0
+                    if not self.sentence_words or self.sentence_words[-1] != predicted_word:
+                        self.sentence_words.append(predicted_word)
+                        print(f"Word Appended: {predicted_word} | Current Sentence: {' '.join(self.sentence_words)}")
+                    self.predictor.reset_word_buffer()
+        
+        # ✨ 4. while 루프가 모두 끝난 후, 마지막으로 남아있는 단어들을 최종 결과에 추가합니다.
+        if self.sentence_words:
+            final_sentence_parts.append(' '.join(self.sentence_words))
+
+        # ✨ 5. 최종적으로 합쳐진 문장 구문들을 하나의 전체 문장으로 만듭니다.
+        final_result = " ".join(final_sentence_parts)
+        
+        self.cleanup(final_result)
+        
+        return final_result
 
             
-            final_result = " ".join(self.sentence_words)
-            self.cleanup()
-            return final_result
-            
-    def cleanup(self):
+    def cleanup(self, final_sentence=""):
         """Cleans up resources and prints the final result."""
-        if self.sentence_words:
+        # ✨ 6. 오타를 수정하고, 문자열에 불필요한 join()을 제거합니다.
+        if final_sentence:
             print(f"\n--- Video Finished ---")
-            print(f"Final Sentence: {' '.join(self.sentence_words)}")
+            print(f"Final Sentence: {final_sentence}")
         
         self.feature_extractor.close()
         self.video_cap.release()
-        #cv2.destroyAllWindows()
         print("--- Resources Released ---")
 
 
