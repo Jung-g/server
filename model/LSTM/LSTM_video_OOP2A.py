@@ -403,7 +403,7 @@ class SignLanguageRecognizer:
                             print(f"Final Sentence (due to inactivity): {' '.join(self.sentence_words)}")
                         self.sentence_words.clear()
                         self.predictor.reset_word_buffer()
-                        self.idle_counter = 0
+                        self.idle_counter = 0 
                         
                     # <--- ✨ 핵심 로직 변경 ✨ ---
                     # "최근에 두 손이 감지된 적이 있었는가?"를 확인
@@ -479,3 +479,4 @@ if __name__ == '__main__':
         print(f"Error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+        print("Please.")
