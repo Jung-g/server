@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from core_method import verify_or_refresh_token, get_db, pwd_context   
-from models import BookMark, StudyRecord, Token, User
+from DB_Table import BookMark, StudyRecord, Token, User
 
 router = APIRouter()
 
