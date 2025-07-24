@@ -41,5 +41,5 @@ async def stream_keypoints_video(words_json: str):
     
     return StreamingResponse(
         api_motion_merge(*motion_data),        
-        media_type='text/plain'
+         media_type='application/x-ndjson'
     )

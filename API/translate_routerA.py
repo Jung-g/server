@@ -92,7 +92,7 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     
     return StreamingResponse(
         api_motion_merge(*motion_data),        
-        media_type='text/plain'
+         media_type='application/x-ndjson'
     )
 # --- 💡 3. B 방식(프레임 스트림 처리) 관련 엔드포인트는 모두 삭제 ---
 # "/translate/analyze_frames" 와 "/translate/translate_latest" 는 A 방식만 사용하므로 삭제합니다.

@@ -311,9 +311,6 @@ def api_draw(hand_df, pose_df, frame_dimensions, frame_len):
         if not flag:
             continue
 
-        base64_bytes = base64.b64encode(encoded_image)
-        base64_string = base64_bytes.decode('utf-8')
+        base64_bytes = base64.b64encode(encoded_image)  
 
-        yield base64_string
-        # yield (b'--frame\r\n' 
-        #        b'Content-Type: image/jpeg\r\n\r\n' + encoded_image.tobytes() + b'\r\n')
+        yield base64_bytes + b'\n'
