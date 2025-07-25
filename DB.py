@@ -20,7 +20,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # 테이블 자동 생성 함수 (이미 있으면 건너뜀)
 def init_db():
     from DB_Table import (
-        User, Word, WordDetail, Animation, Study, StudyStep,
+        User, Word, WordDetail, Study, StudyStep,
         StudyStepMeta, StudyRecord, BookMark, Token
     )
     Base.metadata.create_all(bind=engine)

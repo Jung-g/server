@@ -14,6 +14,7 @@ from API.translate_routerB import router as translate_routerB
 from API.user_router import router as user_router
 from API.bookmark_router import router as bookmark_router
 from API.calendar_router import router as calendar_router
+from API.animation_router import router as animation_router
 # uvicorn main:app --host 0.0.0.0 --port 80 --log-level debug --reload
 
 @asynccontextmanager
@@ -66,3 +67,6 @@ app.include_router(bookmark_router)
 
 # 학습 달력
 app.include_router(calendar_router)
+
+# 애니메이션
+app.include_router(animation_router)

@@ -1,7 +1,7 @@
 # calculate_korean2gloss.py
-from resource_loader import resources # 중앙 리소스 관리자 import
-from kobart_translate import kobart_translate
-from KoT5_translate import kot5_translate
+from .resource_loader import resources # 중앙 리소스 관리자 import
+from .kobart_translate import kobart_translate
+from .KoT5_translate import kot5_translate
 from sentence_transformers import util
 
 def get_best_translation(sentence: str):

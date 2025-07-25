@@ -16,3 +16,6 @@ torch
 pyctcdecode
 pandas
 pytz
+tqdm
+transformers
+sentence-transformers

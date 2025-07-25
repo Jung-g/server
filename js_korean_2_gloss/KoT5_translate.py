@@ -1,5 +1,5 @@
 # KoT5_translate.py
-from resource_loader import resources # 중앙 리소스 관리자 import
+from .resource_loader import resources # 중앙 리소스 관리자 import
 
 def kot5_translate(text: str) -> str:
     """입력 문장을 KoT5로 번역/분석해서 결과 문자열 반환"""

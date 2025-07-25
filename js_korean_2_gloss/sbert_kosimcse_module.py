@@ -1,5 +1,5 @@
 # sbert_kosimcse_module.py
-from resource_loader import resources # 중앙 리소스 관리자 import
+from .resource_loader import resources # 중앙 리소스 관리자 import
 from sentence_transformers import util
 
 def sbert_kosimcse_search(words, topn=3):

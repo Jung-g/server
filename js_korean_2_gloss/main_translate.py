@@ -2,10 +2,10 @@
 
 # 1. 필요한 모듈과 함수들을 가져옵니다.
 # resource_loader를 가장 먼저 import하면, 프로그램 시작 시 모든 리소스가 로딩됩니다.
-from resource_loader import resources
-from calculate_korean2gloss import get_best_translation
-from sbert_kosimcse_module import sbert_kosimcse_search
-from best_similar import find_best_candidate_iterative
+from .resource_loader import resources
+from .calculate_korean2gloss import get_best_translation
+from .sbert_kosimcse_module import sbert_kosimcse_search
+from .best_similar import find_best_candidate_iterative
 
 def process_sentence(text):
     """

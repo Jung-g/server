@@ -109,7 +109,8 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         print(f"--- New recognizer created for user: {user_id} ---")
         user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
 
-    
+    body = await request.body()
+    print(f"[DEBUG] Raw request body: {body.decode('utf-8')}")
     recognizer = user_recognizers[user_id]
     
     newly_recognized_words = []
