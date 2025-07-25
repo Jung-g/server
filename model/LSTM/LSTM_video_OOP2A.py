@@ -17,12 +17,13 @@ CONFIG = {
         "SEQ_LEN_WORD": 30,
         #"OVERLAP_LEN_WORD": 40,
         "STABLE_THRESHOLD_WORD": 1,
+
         "CONF_THRESHOLD_WORD": 0.7,
         
         "SEQ_LEN_ALPHABET": 10,
-        "CONF_THRESHOLD_ALPHABET": 0.80,
+        "CONF_THRESHOLD_ALPHABET": 0.78,
 
-        "IDLE_TIME_SECS": 2.5,
+        "IDLE_TIME_SECS": 7,
         "MOVEMENT_THRESHOLD": 0.6,
     }
 

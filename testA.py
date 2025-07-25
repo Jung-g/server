@@ -8,7 +8,7 @@ from model.LSTM.LSTM_video_OOP2A import SignLanguageRecognizer, CONFIG
 # 💡 2. 테스트에 사용할 비디오 파일 경로를 설정합니다.
 #    이 경로를 본인의 테스트 영상 파일 경로로 바꿔주세요.
 #    윈도우 경로는 'C:/Users/...' 처럼 슬래시(/)를 사용하거나 'C:\\Users\\...' 처럼 이중 역슬래시를 사용해야 합니다.
-TEST_VIDEO_PATH = "c:\\Users\\bit\\Desktop\\KakaoTalk_20250716_212034817.mp4" # ◀◀◀ 본인의 테스트 영상 파일 경로를 여기에 입력하세요!
+TEST_VIDEO_PATH = "c:\\Users\\bit\\Desktop\\KakaoTalk_20250724_164924678.mp4" # ◀◀◀ 본인의 테스트 영상 파일 경로를 여기에 입력하세요!
 
 
 def run_local_test():
