@@ -39,6 +39,8 @@ app.add_middleware(
 # user정보 수정 (회원가입 / 탈퇴 / 비밀번호, 닉네임 변경)
 app.include_router(user_router)
 
+print("user_router 등록 완료")
+
 # 회원가입시 아이디 중복 체크
 app.include_router(checkUID_router)
 

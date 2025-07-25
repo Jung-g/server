@@ -1,0 +1,14 @@
+# KoT5_translate.py
+from resource_loader import resources # 중앙 리소스 관리자 import
+
+def kot5_translate(text: str) -> str:
+    """입력 문장을 KoT5로 번역/분석해서 결과 문자열 반환"""
+    inputs = resources.kot5_tokenizer(
+        text, max_length=25, truncation=True, padding="max_length", return_tensors="pt"
+    )
+    output_ids = resources.kot5_model.generate(
+        input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"],
+        max_length=30, num_beams=5, early_stopping=True
+    )
+    result = resources.kot5_tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    return result
