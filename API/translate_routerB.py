@@ -17,6 +17,10 @@ from cachetools import TTLCache
 from model.LSTM.LSTM_video_OOP2B import SignLanguageRecognizer # 파일 이름과 경로 확인!
 from model.LSTM.LSTM_video_OOP2A import CONFIG # 파일 이름과 경로 확인!
 
+#박준수 수정
+from js_gloss_2_korean.hong_translate_main import translate_pipeline
+#--
+
 router = APIRouter()
 
 load_dotenv(dotenv_path="deepl_api_key.env")
@@ -141,8 +145,10 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     recognizer = user_recognizers[user_id]
     
     # Recognizer 객체에서 최종 문장 가져오기
-    final_sentence = recognizer.get_full_sentence()
-    
+    #박준수 수정 (기존 코드 - final_sentence = recognizer.get_full_sentence() )
+    semi_sentence = recognizer.get_semi_sentence()
+    final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+    #--
     
     if not final_sentence:
         return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
