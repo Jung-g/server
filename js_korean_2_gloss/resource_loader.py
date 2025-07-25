@@ -2,6 +2,7 @@
 
 import os
 import csv
+import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 from transformers import BartForConditionalGeneration, PreTrainedTokenizerFast, T5ForConditionalGeneration, T5TokenizerFast
 import torch
@@ -18,6 +19,7 @@ class ResourceManager:
         self.PATHS = {
             "kobart_model": os.path.join(dataset_dir, "kobart_checkpoint-10000"),
             "kot5_model": os.path.join(dataset_dir, "kot5_checkpoint-146000"),
+            "kobart_g2s_model": os.path.join(dataset_dir, "kobart_lemma_to_sentence_model"),
             "source_csv": os.path.join(dataset_dir, "동영상가능데이터셋.txt"), # 원본 데이터셋
             "lemma_txt": os.path.join(dataset_dir, "extract_lemma.txt"),   # 추출해서 만들 파일
             "cache_sbert": os.path.join(dataset_dir, "our_lemma_cache_sbert.pt"),
@@ -33,6 +35,8 @@ class ResourceManager:
         self.kobart_model = BartForConditionalGeneration.from_pretrained(self.PATHS["kobart_model"])
         self.kot5_tokenizer = T5TokenizerFast.from_pretrained(self.PATHS["kot5_model"])
         self.kot5_model = T5ForConditionalGeneration.from_pretrained(self.PATHS["kot5_model"])
+        self.kobart_g2s_tokenizer = PreTrainedTokenizerFast.from_pretrained(self.PATHS["kobart_g2s_model"])
+        self.kobart_g2s_model = BartForConditionalGeneration.from_pretrained(self.PATHS["kobart_g2s_model"])
 
         print("\n[2/4] SBERT 계열 모델 5종 로딩...")
         self.SBERT_MODELS = { "sbert": SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS"), "kosim_roberta": SentenceTransformer("BM-K/KoSimCSE-roberta"), "kosim_multitask": SentenceTransformer("BM-K/KoSimCSE-RoBERTa-multitask"), "bge_m3_korean": SentenceTransformer("upskyy/bge-m3-korean"), "ko_sroberta_multitask": SentenceTransformer("jhgan/ko-sroberta-multitask") }
@@ -43,9 +47,18 @@ class ResourceManager:
         self.lemma_list = sorted(list(self.lemmas_set))
 
         # --- 사전 임베딩 및 캐시 관리 (변경 없음) ---
-        print("\n[4/4] 사전 임베딩 및 캐시 관리...")
+        print("\n[4/5] 사전 임베딩 및 캐시 관리...")
         self.SBERT_EMBEDDINGS = { "sbert": self._get_or_create_embeddings("sbert", self.PATHS["cache_sbert"]), "kosim_roberta": self._get_or_create_embeddings("kosim_roberta", self.PATHS["cache_kosim_roberta"]), "kosim_multitask": self._get_or_create_embeddings("kosim_multitask", self.PATHS["cache_kosim_multitask"]), "bge_m3_korean": self._get_or_create_embeddings("bge_m3_korean", self.PATHS["cache_bge_m3_korean"]), "ko_sroberta_multitask": self._get_or_create_embeddings("ko_sroberta_multitask", self.PATHS["cache_ko_sroberta_multitask"]), }
         
+                # --- [추가] 3. Gemini API 설정 ---
+        print("\n[5/5] Gemini API 설정...")
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            genai.configure(api_key=api_key)
+            print("  ✅ Gemini API 키가 성공적으로 설정되었습니다.")
+        else:
+            print("  ⚠️ 경고: GEMINI_API_KEY 환경변수가 설정되지 않았습니다. Gemini 호출이 실패할 수 있습니다.")
+            
         print("\n모든 리소스 로딩 완료!")
         print("="*50)
 
