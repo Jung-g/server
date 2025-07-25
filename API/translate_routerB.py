@@ -117,6 +117,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         frame_np = decode_base64_to_numpy(base64_frame)
         if frame_np is None:
             continue
+
         
         frame_np = cv2.flip(frame_np, 1)
 

@@ -275,9 +275,11 @@ class SignLanguageRecognizer:
             self.reset()
             return None # 유휴 상태이므로 아무것도 반환 안 함
 
-        # --- ✨ 핵심 로직: 신뢰도 기반으로 단어/지문자 판정 ---
+        # 핵심 로직: 신뢰도 기반으로 단어/지문자 판정 ---
         predicted_word, word_conf = self.predictor.predict_word(word_feats)
         predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
+
+        print(f"DEBUG: Word='{predicted_word}' (Conf: {word_conf:.2f}), Alphabet='{predicted_alphabet}' (Conf: {alphabet_conf:.2f})")
 
         newly_recognized_token = None
 
