@@ -80,6 +80,7 @@ async def translate_video_file(
     os.unlink(temp_video_path) # 임시 파일 삭제
 
     # 5. 최종 문장 가져오기
+    
     final_sentence = recognizer.get_full_sentence()
     
     if not final_sentence:
@@ -109,8 +110,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         print(f"--- New recognizer created for user: {user_id} ---")
         user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
 
-    body = await request.body()
-    print(f"[DEBUG] Raw request body: {body.decode('utf-8')}")
+    
     recognizer = user_recognizers[user_id]
     
     newly_recognized_words = []
@@ -118,6 +118,7 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         frame_np = decode_base64_to_numpy(base64_frame)
         if frame_np is None:
             continue
+
         
         frame_np = cv2.flip(frame_np, 1)
 
