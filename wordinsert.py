@@ -1,4 +1,4 @@
-from models import Word
+from DB_Table import Word
 from DB import SessionLocal  # 본인의 세션 팩토리 import
 from sqlalchemy.orm import Session
 

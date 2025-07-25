@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from core_method import get_db
-from models import Token
+from DB_Table import Token
 
 router = APIRouter()
 

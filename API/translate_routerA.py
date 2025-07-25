@@ -3,8 +3,9 @@ import tempfile
 from dotenv import load_dotenv
 import deepl
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from models import Word
+from DB_Table import Word
 from core_method import get_db, verify_or_refresh_token
 
 # --- 💡 1. 불필요한 import 정리 및 새로운 클래스 추가 ---
@@ -42,9 +43,9 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
         
         print(f"### 디버깅: recognizer.run()의 실제 반환값: '{predicted_word}' (타입: {type(predicted_word)}) ###")
 
-
         print("예측 결과:", predicted_word)
         print("사용자 정답:", expected_word)
+        
 
     except Exception as e:
         print(f"An error occurred during recognition: {e}")
@@ -67,30 +68,34 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
         "match": is_match,
     }
 
-
+import traceback
 # --- 텍스트 → 수어 (기존 코드 유지) ---
 @router.get("/translate/text_to_sign")
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
     
-    word = db.query(Word).filter(Word.Word == word_text).first()
+
+    # mBERT 이용해서 문장 -> list
+    # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    # words = []
+    words = word_text.strip().split()
+    # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     
-    if not word:
-        raise HTTPException(status_code = 404, detail="단어가 존재하지 않습니다.")
+    from anime.motion_merge import check_merge, api_motion_merge
     
-    clean_word = word.Word.strip().replace("'", "").replace('"', "")
-    file_name = f"{clean_word}.mp4"
-    file_path = os.path.join(VIDEO_DIR, file_name)
+    try:
+        motion_data = check_merge(words, send_type='api')
+    except Exception as e:
+        print("[ERROR] check_merge 에러 발생:", e)
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail=f'{e}' # 클라이언트에게 보여줄 메시지
+        )
+    
+    frame_generator = api_motion_merge(*motion_data)
+    frame_list = list(frame_generator)
 
-    if os.path.isfile(file_path):
-        video_url = f"http://10.101.92.18/video/{file_name}" # 이 URL은 실제 환경에 맞게 수정 필요
-    else:
-        video_url = "" 
-
-    return {
-        "URL": video_url
-    }
-
-
+    return JSONResponse(content={"frames": frame_list})
 # --- 💡 3. B 방식(프레임 스트림 처리) 관련 엔드포인트는 모두 삭제 ---
 # "/translate/analyze_frames" 와 "/translate/translate_latest" 는 A 방식만 사용하므로 삭제합니다.

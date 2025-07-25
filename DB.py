@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base
+from DB_Table import Base
 
 # DB 연결
 SERVER = r"LAPTOP-5P5I1F6C\SQLEXPRESS"
@@ -19,8 +19,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 테이블 자동 생성 함수 (이미 있으면 건너뜀)
 def init_db():
-    from models import (
-        User, Word, Animation, Study, StudyStep,
-        StudyRecord, BookMark, Token
+    from DB_Table import (
+        User, Word, WordDetail, Animation, Study, StudyStep,
+        StudyStepMeta, StudyRecord, BookMark, Token
     )
     Base.metadata.create_all(bind=engine)
