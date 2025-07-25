@@ -1,6 +1,6 @@
 # hong_translate_main.py
 
-from resource_loader import resources
+from js_korean_2_gloss.resource_loader import resources
 from my_jamo import preprocess_input, assemble_jamos
 from calculate_korean2gloss import calculate_similarity
 from gemini_control import gemini_translate_control

@@ -1,6 +1,6 @@
 # calculate_korean2gloss.py
 
-from resource_loader import resources # 중앙 리소스 관리자는 이미 SBERT 모델들을 로드하고 있습니다.
+from js_korean_2_gloss.resource_loader import resources # 중앙 리소스 관리자는 이미 SBERT 모델들을 로드하고 있습니다.
 from sentence_transformers import util
 
 def calculate_similarity(sentence1: str, sentence2: str) -> float:
