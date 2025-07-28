@@ -36,14 +36,14 @@
 #         f.write(kor + '\n')
 
 # 추출한 단어에서 중복제거
-input_path = r'd:\Bit\server\anime\DataSet\애니메이션 만들 수 있는 단어.txt'
-output_path = r'd:\Bit\server\anime\DataSet\애니메이션 만들 수 있는 단어(중복제거).txt'
+# input_path = r'd:\Bit\server\anime\DataSet\애니메이션 만들 수 있는 단어.txt'
+# output_path = r'd:\Bit\server\anime\DataSet\애니메이션 만들 수 있는 단어(중복제거).txt'
 
-with open(input_path, 'r', encoding='utf-8') as f:
-    words = [line.strip() for line in f if line.strip()]
+# with open(input_path, 'r', encoding='utf-8') as f:
+#     words = [line.strip() for line in f if line.strip()]
 
-unique_words = sorted(set(words))
+# unique_words = sorted(set(words))
 
-with open(output_path, 'w', encoding='utf-8') as f:
-    for word in unique_words:
-        f.write(word + '\n')
+# with open(output_path, 'w', encoding='utf-8') as f:
+#     for word in unique_words:
+#         f.write(word + '\n')
