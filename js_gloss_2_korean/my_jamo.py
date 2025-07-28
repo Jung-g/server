@@ -13,6 +13,12 @@ COMPOUND_TAILS = {
     ('ㄹ','ㅅ'):'ㄽ', ('ㄹ','ㅌ'):'ㄾ', ('ㄹ','ㅍ'):'ㄿ', ('ㄹ','ㅎ'):'ㅀ', ('ㅂ','ㅅ'):'ㅄ',
 }
 
+def is_jamo_or_numeric_only(text: str) -> bool:
+    # ^: 문자열 시작, $: 문자열 끝
+    # [ㄱ-ㅎㅏ-ㅣ\d\s]+: 자모(ㄱ-ㅎ, ㅏ-ㅣ), 숫자(\d), 공백(\s)이 하나 이상(+) 있는지 검사
+    pattern = r'^[ㄱ-ㅎㅏ-ㅣ\d\s]+$'
+    return bool(re.fullmatch(pattern, text))
+
 # 자모 사이의 공백을 제거하는 전처리 함수
 def preprocess_input(text):
     # 나중에 비교하기 위해, 함수에 들어온 초기 텍스트를 'previous_text'에 저장
@@ -92,26 +98,3 @@ def assemble_jamos(text):
     
     # 리스트에 담긴 모든 글자들을 하나의 문자열로 합쳐서 반환
     return ''.join(result)
-
-# # --- 대화형 로직 부분 (변경 없음) ---
-# if __name__ == '__main__':
-#     print("-" * 50)
-#     print("분리된 자모를 완성형 한글로 변환합니다.")
-#     print("예: 'ㄷㅏㄹㄱ' -> '닭', 'ㅇ ㅜ ㅅ ㅗ ㅇ' -> '우송'")
-#     print("종료를 원하시면 'q'를 입력하세요.")
-#     print("-" * 50)
-
-#     while True:
-#         user_input = input("자모 입력: ")
-
-#         if user_input.lower() == 'q':
-#             print("프로그램을 종료합니다.")
-#             break
-        
-#         if not user_input.strip():
-#             continue
-
-#         processed_input = preprocess_input(user_input)
-#         result_text = assemble_jamos(processed_input)
-
-#         print(f"  결과: {result_text}\n")

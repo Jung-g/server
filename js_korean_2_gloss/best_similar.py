@@ -30,10 +30,12 @@ def find_best_candidate_iterative(search_results_for_word):
         # 해당 빈도수의 후보가 없으면 다음 단계로 넘어갑니다.
         if not words_by_freq[freq]:
             continue
+        
+        sorted_candidates = sorted(words_by_freq[freq], key=lambda x: x[1], reverse=True)
 
         print(f"\n[ 빈도수 {freq} 검사 ]")
         # 해당 빈도의 모든 후보와 각각의 평균 점수를 출력합니다.
-        freq_candidates_str = ", ".join([f"'{w}'(평균:{s:.4f})" for w, s in words_by_freq[freq]])
+        freq_candidates_str = ", ".join([f"'{w}'(평균:{s:.4f})" for w, s in sorted_candidates])
         print(f"  - 후보: {freq_candidates_str}")
 
         # 기준을 통과하는 후보들을 찾습니다.
@@ -48,7 +50,10 @@ def find_best_candidate_iterative(search_results_for_word):
     # 3. [빈도수 1 검사] (기준: 절대 점수 >= 0.8)
     if words_by_freq[1]:
         print(f"\n[ 빈도수 1 검사 ]")
-        freq_candidates_str = ", ".join([f"'{w}'(점수:{s:.4f})" for w, s in words_by_freq[1]])
+        
+        sorted_candidates = sorted(words_by_freq[1], key=lambda x: x[1], reverse=True)
+
+        freq_candidates_str = ", ".join([f"'{w}'(점수:{s:.4f})" for w, s in sorted_candidates])
         print(f"  - 후보: {freq_candidates_str}")
 
         passed_candidates = [(w, s) for w, s in words_by_freq[1] if s >= 0.8]
