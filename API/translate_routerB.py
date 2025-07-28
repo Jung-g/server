@@ -25,7 +25,7 @@ user_recognizers = TTLCache(maxsize=100, ttl=300)
 def serialize_result(r: deepl.TextResult):
     return {
         "text": r.text,
-        "detected_source_lang": r.detected_source_lang,
+        "원본언어": r.detected_source_lang,
     }
 
 def decode_base64_to_numpy(base64_string: str) -> np.ndarray:
@@ -128,7 +128,12 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     user_id = verify_or_refresh_token(request, response)
 
     if user_id not in user_recognizers:
-        return {"korean": "분석된 내용이 없습니다.", "english": "", "japanese": "", "chinese": ""}
+        return {
+            "korean": "인식된 단어가 없습니다.",
+            "english": {"text": "", "원본언어": "KO"},
+            "japanese": {"text": "", "원본언어": "KO"},
+            "chinese": {"text": "", "원본언어": "KO"},
+        }
 
     recognizer = user_recognizers[user_id]
     
@@ -160,7 +165,12 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
         word = None
     
     if not word:
-        return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
+        return {
+            "korean": "인식된 단어가 없습니다.",
+            "english": {"text": "", "원본언어": "KO"},
+            "japanese": {"text": "", "원본언어": "KO"},
+            "chinese": {"text": "", "원본언어": "KO"},
+        }
 
     # DeepL 번역
     translator = deepl.Translator(AUTH_KEY)
@@ -183,7 +193,12 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     user_id = verify_or_refresh_token(request, response)
 
     if user_id not in user_recognizers:
-        return {"korean": "분석된 내용이 없습니다.", "english": "", "japanese": "", "chinese": ""}
+        return {
+            "korean": "인식된 단어가 없습니다.",
+            "english": {"text": "", "원본언어": "KO"},
+            "japanese": {"text": "", "원본언어": "KO"},
+            "chinese": {"text": "", "원본언어": "KO"},
+        }
 
     recognizer = user_recognizers[user_id]
     
@@ -198,8 +213,12 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
         word = None
     
     if not word:
-        return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
-
+        return {
+            "korean": "인식된 단어가 없습니다.",
+            "english": {"text": "", "원본언어": "KO"},
+            "japanese": {"text": "", "원본언어": "KO"},
+            "chinese": {"text": "", "원본언어": "KO"},
+        }
     # DeepL 번역
     translator = deepl.Translator(AUTH_KEY)
     result = {
