@@ -1,8 +1,8 @@
 # controller.py
 
 # [수정] os, genai 관련 import 및 설정 코드 모두 제거
-import gemini_pro_prompt
-import gemini_flash_prompt
+from . import gemini_pro_prompt
+from . import gemini_flash_prompt
     
 def gemini_translate_control(original_sentence: str, first_gloss: str):
     """
@@ -12,7 +12,7 @@ def gemini_translate_control(original_sentence: str, first_gloss: str):
     pro_result = gemini_pro_prompt.get_pro_translation(original_sentence, first_gloss)
     
     if not pro_result.startswith("[Error"):
-        print("✅ Pro 모델 호출 성공!")
+        print("Pro 모델 호출 성공!")
         return pro_result
     
     print(f"⚠️ Pro 모델 호출 실패: {pro_result}")
@@ -21,8 +21,8 @@ def gemini_translate_control(original_sentence: str, first_gloss: str):
     flash_result = gemini_flash_prompt.get_flash_translation(original_sentence, first_gloss)
     
     if not flash_result.startswith("[Error"):
-        print("✅ Flash 모델 호출 성공!")
+        print("Flash 모델 호출 성공!")
         return flash_result
     
-    print(f"⚠️ Flash 모델도 호출 실패: {flash_result}")
+    print(f"Flash 모델도 호출 실패: {flash_result}")
     return flash_result

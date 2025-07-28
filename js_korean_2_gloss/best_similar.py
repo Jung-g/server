@@ -14,7 +14,7 @@ def find_best_candidate_iterative(search_results_for_word):
             scores_by_word[word].append(score)
 
     if not scores_by_word:
-        return None, "❌ 최종 실패 (검색 결과 없음)"
+        return None, "최종 실패 (검색 결과 없음)"
 
     aggregated_stats = {
         word: {"frequency": len(scores), "avg_score": sum(scores) / len(scores)}
@@ -43,7 +43,7 @@ def find_best_candidate_iterative(search_results_for_word):
             passed_candidates.sort(key=lambda x: x[1], reverse=True) # 점수 높은 순 정렬
             best_word, best_score = passed_candidates[0]
             result_details = {'word': best_word, 'score': best_score, 'frequency': freq}
-            return result_details, f"✅ 성공 (빈도: {freq}, 평균점수≥0.75)"
+            return result_details, f"성공 (빈도: {freq}, 평균점수≥0.75)"
 
     # 3. [빈도수 1 검사] (기준: 절대 점수 >= 0.8)
     if words_by_freq[1]:
@@ -57,7 +57,7 @@ def find_best_candidate_iterative(search_results_for_word):
             passed_candidates.sort(key=lambda x: x[1], reverse=True)
             best_word, best_score = passed_candidates[0]
             result_details = {'word': best_word, 'score': best_score, 'frequency': 1}
-            return result_details, "✅ 성공 (빈도: 1, 절대점수≥0.8)"
+            return result_details, "성공 (빈도: 1, 절대점수≥0.8)"
 
     # 4. [최종 선택] 모든 기준 실패 시, 빈도수 5였던 단어 중 최고점자 선택
     print("\n[ 모든 기준 미충족. 최종 선택(Fallback) 시도 ]")
@@ -66,6 +66,6 @@ def find_best_candidate_iterative(search_results_for_word):
         words_by_freq[5].sort(key=lambda x: x[1], reverse=True)
         best_word, best_score = words_by_freq[5][0]
         result_details = {'word': best_word, 'score': best_score, 'frequency': 5}
-        return result_details, "⚠️ 최종 선택 (빈도수 5 중 최고점)"
+        return result_details, "최종 선택 (빈도수 5 중 최고점)"
 
-    return None, "❌ 최종 실패 (모든 기준 및 최종 선택 실패)"
+    return None, "최종 실패 (모든 기준 및 최종 선택 실패)"

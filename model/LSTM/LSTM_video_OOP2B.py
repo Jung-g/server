@@ -1,5 +1,3 @@
-# LSTM_video_OOP2.py (B방식 지원 버전)
-
 from collections import deque
 import cv2
 import mediapipe as mp
@@ -53,9 +51,9 @@ class FeatureExtractor:
 
     def extract(self, frame):
         """Processes a single frame to extract all required features."""
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results_pose = self.pose.process(frame_rgb)
-        results_hands = self.hands.process(frame_rgb)
+        # frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results_pose = self.pose.process(frame)
+        results_hands = self.hands.process(frame)
         
         num_hands_detected = 0
         if results_hands.multi_hand_landmarks:
@@ -230,7 +228,6 @@ class Predictor:
         self.alphabet_confirm_buffer.clear()
         self.last_confirmed_alphabet = None
 
-# --- 💡 1. `SignLanguageRecognizer` 클래스 대폭 수정 ---
 class SignLanguageRecognizer:
     def __init__(self, config):
         self.config = config
@@ -293,7 +290,7 @@ class SignLanguageRecognizer:
             self.predictor.reset_word_buffer() 
 
             
-            # ❗ 올바른 버퍼 초기화: 단어 버퍼만 리셋하여 지문자 연속 인식을 유지
+            # 올바른 버퍼 초기화: 단어 버퍼만 리셋하여 지문자 연속 인식을 유지
             self.predictor.reset_word_buffer() 
 
         elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.89):
@@ -305,7 +302,7 @@ class SignLanguageRecognizer:
             self.predictor.reset_word_buffer()
 
 
-            # ❗ 올바른 버퍼 초기화: 단어 버퍼만 리셋
+            # 올바른 버퍼 초기화: 단어 버퍼만 리셋
             self.predictor.reset_word_buffer()
 
         return newly_recognized_token # 새로 인식된 단어/지문자 반환 (없으면 None)
@@ -318,5 +315,4 @@ class SignLanguageRecognizer:
         """리소스 정리"""
         self.feature_extractor.close()
 
-# --- 💡 2. 기존 run() 메소드 및 if __name__ == '__main__': 부분은 테스트용이므로 삭제하거나 주석 처리 ---
 # if __name__ == '__main__': ...

@@ -6,11 +6,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Reques
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from DB_Table import Word
+from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
-
-# --- 💡 1. 불필요한 import 정리 및 새로운 클래스 추가 ---
-# 기존의 run_model, LSTM_frame 등을 모두 지우고 OOP2의 클래스를 가져옵니다.
-# 파일 위치가 model/LSTM/LSTM_video_OOP2.py 라면 아래 경로가 맞습니다.
+from js_korean_2_gloss import main_translate
 from model.LSTM.LSTM_video_OOP2A import SignLanguageRecognizer, CONFIG
 
 router = APIRouter()
@@ -74,28 +72,55 @@ import traceback
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
     
-
-    # mBERT 이용해서 문장 -> list
+# mBERT 이용해서 문장 -> list
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-    # words = []
-    words = word_text.strip().split()
-    # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-    
-    from anime.motion_merge import check_merge, api_motion_merge
-    
     try:
+        if len(word_text) != 1:
+            words = main_translate(word_text)
+        else:
+            words = [word_text]
+    # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    
         motion_data = check_merge(words, send_type='api')
-    except Exception as e:
+    except ValueError as e:
         print("[ERROR] check_merge 에러 발생:", e)
         traceback.print_exc()
         raise HTTPException(
             status_code=500, 
             detail=f'{e}' # 클라이언트에게 보여줄 메시지
         )
-    
+    except Exception as e:
+        print("[ERROR] 에상치 못한 에러 발생:", e)
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail=f'{e}' # 클라이언트에게 보여줄 메시지
+        )
+        
     frame_generator = api_motion_merge(*motion_data)
     frame_list = list(frame_generator)
 
     return JSONResponse(content={"frames": frame_list})
-# --- 💡 3. B 방식(프레임 스트림 처리) 관련 엔드포인트는 모두 삭제 ---
-# "/translate/analyze_frames" 와 "/translate/translate_latest" 는 A 방식만 사용하므로 삭제합니다.
+
+    # # mBERT 이용해서 문장 -> list
+    # # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    # # words = []
+    # # words = word_text.strip().split()
+    # # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    
+    # from anime.motion_merge import check_merge, api_motion_merge
+    
+    # try:
+    #     motion_data = check_merge(words, send_type='api')
+    # except Exception as e:
+    #     print("[ERROR] check_merge 에러 발생:", e)
+    #     traceback.print_exc()
+    #     raise HTTPException(
+    #         status_code=500, 
+    #         detail=f'{e}' # 클라이언트에게 보여줄 메시지
+    #     )
+    
+    # frame_generator = api_motion_merge(*motion_data)
+    # frame_list = list(frame_generator)
+
+    # return JSONResponse(content={"frames": frame_list})

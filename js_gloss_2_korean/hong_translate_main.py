@@ -1,9 +1,9 @@
 # hong_translate_main.py
 
 from js_korean_2_gloss.resource_loader import resources
-from my_jamo import preprocess_input, assemble_jamos
-from calculate_korean2gloss import calculate_similarity
-from gemini_control import gemini_translate_control
+from .my_jamo import preprocess_input, assemble_jamos
+from .calculate_korean2gloss import calculate_similarity
+from .gemini_control import gemini_translate_control
 
 def translate_pipeline(raw_text: str) -> list:
     """
@@ -32,13 +32,13 @@ def translate_pipeline(raw_text: str) -> list:
     # 5단계: 유사도 점수에 따른 Gemini 호출
     if similarity <= 0.79:
         print("-" * 60)
-        print(f"⚠️ 유사도({similarity:.4f})가 0.8 이하이므로 Gemini API를 호출하여 재번역합니다.")
+        print(f"유사도({similarity:.4f})가 0.8 이하이므로 Gemini API를 호출하여 재번역합니다.")
         gemini_result = gemini_translate_control(raw_text, gloss_sentence)
         
         if not gemini_result.startswith("[Error"):
             final_sentence = gemini_result
         else:
-            print(f"🚨 Gemini 호출 실패! KoBART 결과를 최종 결과로 사용합니다.")
+            print(f"Gemini 호출 실패! KoBART 결과를 최종 결과로 사용합니다.")
         
     final_sentence_list.append(final_sentence)
 

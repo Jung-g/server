@@ -10,24 +10,15 @@ import cv2
 import base64
 import tempfile
 from fastapi import File, UploadFile
-
 from cachetools import TTLCache
-
-
-from model.LSTM.LSTM_video_OOP2B import SignLanguageRecognizer # 파일 이름과 경로 확인!
-from model.LSTM.LSTM_video_OOP2A import CONFIG # 파일 이름과 경로 확인!
-
-#박준수 수정
+from model.LSTM.LSTM_video_OOP2B import SignLanguageRecognizer
+from model.LSTM.LSTM_video_OOP2A import CONFIG
 from js_gloss_2_korean.hong_translate_main import translate_pipeline
-#--
 
 router = APIRouter()
 
 load_dotenv(dotenv_path="deepl_api_key.env")
 AUTH_KEY = os.getenv("DEEPL_API_KEY")
-
-# --- 💡 2. 사용자별 Recognizer 객체를 저장할 딕셔너리 ---
-# { "user_id": SignLanguageRecognizer_instance } 형태로 저장됩니다.
 #user_recognizers = {}
 user_recognizers = TTLCache(maxsize=100, ttl=300) 
 
@@ -52,21 +43,21 @@ async def translate_video_file(
     클라이언트가 보낸 비디오 파일 전체를 한 번에 받아 처리하고,
     번역된 텍스트를 즉시 반환하는 엔드포인트입니다.
     """
-    # 1. 사용자 인증
+    # 사용자 인증
     #user_id = verify_or_refresh_token(request, response)
 
-    # 2. 업로드된 비디오 파일을 임시 파일로 저장
+    # 업로드된 비디오 파일을 임시 파일로 저장
     # OpenCV가 파일 경로로 영상을 읽기 때문에 임시 파일 생성이 필요합니다.
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
         contents = await file.read()
         temp_video.write(contents)
         temp_video_path = temp_video.name
 
-    # 3. 요청마다 새로운 Recognizer 인스턴스 생성
+    # 요청마다 새로운 Recognizer 인스턴스 생성
     # 이 방식은 상태를 공유하지 않으므로, 각 요청을 독립적으로 처리합니다.
     recognizer = SignLanguageRecognizer(CONFIG)
     
-    # 4. 비디오 파일 처리
+    # 비디오 파일 처리
     cap = cv2.VideoCapture(temp_video_path)
     if not cap.isOpened():
         raise HTTPException(status_code=500, detail="비디오 파일을 열 수 없습니다.")
@@ -83,28 +74,27 @@ async def translate_video_file(
     cap.release()
     os.unlink(temp_video_path) # 임시 파일 삭제
 
-    # 5. 최종 문장 가져오기
+    # 최종 문장 가져오기
     
     final_sentence = recognizer.get_full_sentence()
     
     if not final_sentence:
         return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
 
-    # 6. DeepL 번역 및 결과 반환
+    # DeepL 번역 및 결과 반환
     try:
         translator = deepl.Translator(AUTH_KEY)
         result = {
             "korean": final_sentence,
-            "english": translator.translate_text(final_sentence, target_lang="EN-US").text,
-            "japanese": translator.translate_text(final_sentence, target_lang="JA").text,
-            "chinese": translator.translate_text(final_sentence, target_lang="ZH").text,
+            "english": translator.translate_text(final_sentence, target_lang="EN-US"),
+            "japanese": translator.translate_text(final_sentence, target_lang="JA"),
+            "chinese": translator.translate_text(final_sentence, target_lang="ZH"),
         }
         return result
     except Exception as e:
         # DeepL API 등에서 오류가 발생할 경우
         raise HTTPException(status_code=500, detail=f"번역 중 오류 발생: {str(e)}")
 
-# --- 💡 3. `/analyze_frames` 엔드포인트 재구성 ---
 @router.post("/translate/analyze_frames")
 async def analyze_frames(request: Request, response: Response, frames: List[str] = Body(..., embed=True), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
@@ -133,10 +123,8 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
             newly_recognized_words.append(result)
             print(f"User {user_id} recognized new word: {result}")
 
-    # 새로 인식된 단어들을 클라이언트에 즉시 반환 (선택사항)
     return {"status": "processing"}
 
-# --- 💡 4. `/translate/translate_latest` 엔드포인트 재구성 ---
 @router.get("/translate/translate_latest")
 def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
@@ -147,21 +135,80 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     recognizer = user_recognizers[user_id]
     
     # Recognizer 객체에서 최종 문장 가져오기
-    #박준수 수정 (기존 코드 - final_sentence = recognizer.get_full_sentence() )
-    semi_sentence = recognizer.get_semi_sentence()
-    final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
-    #--
+    # final_sentence = recognizer.get_full_sentence()
+    # semi_sentence = recognizer.get_full_sentence()
+    # if len(semi_sentence) == 1:
+    #     if len(semi_sentence[0]) == 1:
+    #         final_sentence = semi_sentence
+    #         #한글자  ㄱ , '밥' 등등
+    # else:
+    #     final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
     
-    if not final_sentence:
+    # if not final_sentence:
+    #     return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
+
+    # # DeepL 번역
+    # translator = deepl.Translator(AUTH_KEY)
+    # result = {
+    #     "korean": final_sentence,
+    #     "english": translator.translate_text(final_sentence, target_lang="EN-US"),
+    #     "japanese": translator.translate_text(final_sentence, target_lang="JA"),
+    #     "chinese": translator.translate_text(final_sentence, target_lang="ZH"),
+    # }
+    
+    if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
+        word = recognizer.sentence_words[-1]
+    else:
+        word = None
+    
+    if not word:
         return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
 
     # DeepL 번역
     translator = deepl.Translator(AUTH_KEY)
     result = {
-        "korean": final_sentence,
-        "english": translator.translate_text(final_sentence, target_lang="EN-US").text,
-        "japanese": translator.translate_text(final_sentence, target_lang="JA").text,
-        "chinese": translator.translate_text(final_sentence, target_lang="ZH").text,
+        "korean": word,
+        "english": translator.translate_text(word, target_lang="EN-US"),
+        "japanese": translator.translate_text(word, target_lang="JA"),
+        "chinese": translator.translate_text(word, target_lang="ZH"),
+    }
+
+    # 다음 문장 인식을 위해 해당 유저의 Recognizer 상태 초기화
+    recognizer.reset()
+    print(f"--- Recognizer for user {user_id} has been reset. ---")
+
+    return result
+
+
+@router.get("/study/translate_latest")
+def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
+    user_id = verify_or_refresh_token(request, response)
+
+    if user_id not in user_recognizers:
+        return {"korean": "분석된 내용이 없습니다.", "english": "", "japanese": "", "chinese": ""}
+
+    recognizer = user_recognizers[user_id]
+    
+    # Recognizer 객체에서 최종 문장 가져오기
+    # final_sentence = recognizer.get_full_sentence()
+    # semi_sentence = recognizer.get_semi_sentence()
+    # final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+
+    if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
+        word = recognizer.sentence_words[-1]
+    else:
+        word = None
+    
+    if not word:
+        return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
+
+    # DeepL 번역
+    translator = deepl.Translator(AUTH_KEY)
+    result = {
+        "korean": word,
+        "english": translator.translate_text(word, target_lang="EN-US"),
+        "japanese": translator.translate_text(word, target_lang="JA"),
+        "chinese": translator.translate_text(word, target_lang="ZH"),
     }
     
     # 다음 문장 인식을 위해 해당 유저의 Recognizer 상태 초기화

@@ -1,5 +1,3 @@
-# LSTM_video_OOP.py
-
 from collections import deque
 import cv2
 import mediapipe as mp
@@ -72,12 +70,12 @@ class FeatureExtractor:
         results_pose = self.pose.process(frame_rgb)
         results_hands = self.hands.process(frame_rgb)
         
-        # <--- 변경된 부분: 감지된 손의 개수를 저장할 변수 ---
+        # --- 감지된 손의 개수를 저장할 변수 ---
         num_hands_detected = 0
         if results_hands.multi_hand_landmarks:
             num_hands_detected = len(results_hands.multi_hand_landmarks)
         
-        # --- 1. Word Model Feature Extraction (Pose + Hands) ---
+        # --- Word Model Feature Extraction (Pose + Hands) ---
         pose_features = np.zeros(16)
         word_model_features = np.zeros(166) # 16 (pose) + 75 (left) + 75 (right)
         
@@ -112,7 +110,7 @@ class FeatureExtractor:
 
         word_model_features = np.concatenate([pose_features, left_hand_features, right_hand_features])
 
-        # --- 2. Dynamic Feature Calculation (Velocity, Acceleration) ---
+        # --- Dynamic Feature Calculation (Velocity, Acceleration) ---
         if self.previous_features is None: self.previous_features = np.zeros_like(word_model_features)
         velocity = word_model_features - self.previous_features
         if self.previous_velocity is None: self.previous_velocity = np.zeros_like(velocity)
@@ -124,7 +122,7 @@ class FeatureExtractor:
 
         dynamic_word_features = np.concatenate([word_model_features, velocity, acceleration])
         
-        #return dynamic_word_features, alphabet_feature, movement, results_pose, results_hands
+        # return dynamic_word_features, alphabet_feature, movement, results_pose, results_hands
         return dynamic_word_features, alphabet_feature, movement, results_pose, results_hands, num_hands_detected
 
 
@@ -174,18 +172,18 @@ class Predictor:
         특징(features) 시퀀스로부터 단어를 예측합니다.
         '호핑 윈도우' 방식을 사용하여 효율적으로 버퍼를 관리합니다.
         """
-        # 1. 버퍼에 새로운 특징 추가
+        # 버퍼에 새로운 특징 추가
         self.word_buffer.append(features)
         
-         # 2. 버퍼가 최대 길이를 초과하면 가장 오래된 데이터 제거
+         # 버퍼가 최대 길이를 초과하면 가장 오래된 데이터 제거
         if len(self.word_buffer) > self.config['SEQ_LEN_WORD']:
             self.word_buffer.popleft()
 
-        # 3. 버퍼가 예측에 필요한 최소 길이에 도달했는지 확인
+        # 버퍼가 예측에 필요한 최소 길이에 도달했는지 확인
         if len(self.word_buffer) < self.config['SEQ_LEN_WORD']:
             return None, 0.0
 
-        # 4. 예측 수행
+        # 예측 수행
         sequence = np.array(list(self.word_buffer))
         
         normalized_sequence = (sequence - self.data_mean) / (self.data_std + 1e-8)
@@ -197,7 +195,7 @@ class Predictor:
         confidence, idx = torch.max(probabilities, 1)
         confidence_item = confidence.item()
 
-        # 5. 예측 안정화 및 결과 반환 (이전과 동일)
+        # 예측 안정화 및 결과 반환 (이전과 동일)
         if confidence_item < self.config['CONF_THRESHOLD_WORD']:
             return None, 0.0
         
@@ -272,16 +270,16 @@ class Visualizer:
             self.font_small = ImageFont.load_default()
             print(f"Warning: Font not found at {font_path}. Using default font.")
         
-        # <--- 변경된 부분: MediaPipe 그리기 유틸리티 초기화 ---
+        # --- 변경된 부분: MediaPipe 그리기 유틸리티 초기화 ---
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_pose = mp.solutions.pose
         self.mp_hands = mp.solutions.hands
 
-    # <--- 변경된 부분: 메소드 시그니처에 landmark 결과 추가 ---
+    # --- 변경된 부분: 메소드 시그니처에 landmark 결과 추가 ---
     def draw(self, frame, prediction, confidence, sentence, buffer_status, results_pose, results_hands):
 
         
-        # <--- 변경된 부분: 랜드마크를 프레임에 먼저 그림 ---
+        # --- 변경된 부분: 랜드마크를 프레임에 먼저 그림 ---
         if results_pose and results_pose.pose_landmarks:
             self.mp_drawing.draw_landmarks(
                 frame,
@@ -357,22 +355,22 @@ class SignLanguageRecognizer:
         print(f"\n--- Starting Sign Language Recognition ---")
         print(f"Device: {self.predictor.device}")
 
-        # ✨ 1. 최종 문장을 담을 리스트 (이 부분은 올바르게 작성하셨습니다)
+        # 최종 문장을 담을 리스트
         final_sentence_parts = []
         
         frame_process_counter = 0
         
-        # ✨ 2. while 루프가 비디오의 모든 프레임을 순회하도록 구조를 바로잡습니다.
+        # while 루프가 비디오의 모든 프레임을 순회
         while self.video_cap.isOpened():
             ret, frame = self.video_cap.read()
             if not ret:
                 print("End of video file reached.")
-                break # 루프를 올바르게 종료합니다.
+                break
             
             frame = cv2.flip(frame, 1)
             frame_process_counter += 1
 
-            # ✨ 3. 모든 인식 로직은 while 루프 안에서, 2프레임 당 한 번씩 실행되도록 합니다.
+            # 모든 인식 로직은 while 루프 안에서, 2프레임 당 한 번씩 실행
             if frame_process_counter % 2 == 0:
                 word_feats, alphabet_feats, movement, _, _, _ = self.feature_extractor.extract(frame)
                 
@@ -410,11 +408,11 @@ class SignLanguageRecognizer:
                         print(f"Word Appended: {predicted_word} | Current Sentence: {' '.join(self.sentence_words)}")
                     self.predictor.reset_word_buffer()
         
-        # ✨ 4. while 루프가 모두 끝난 후, 마지막으로 남아있는 단어들을 최종 결과에 추가합니다.
+        # while 루프가 모두 끝난 후, 마지막으로 남아있는 단어들을 최종 결과에 추가
         if self.sentence_words:
             final_sentence_parts.append(' '.join(self.sentence_words))
 
-        # ✨ 5. 최종적으로 합쳐진 문장 구문들을 하나의 전체 문장으로 만듭니다.
+        # 최종적으로 합쳐진 문장 구문들을 하나의 전체 문장으로 만들기
         final_result = " ".join(final_sentence_parts)
         
         self.cleanup(final_result)
@@ -424,7 +422,7 @@ class SignLanguageRecognizer:
             
     def cleanup(self, final_sentence=""):
         """Cleans up resources and prints the final result."""
-        # ✨ 6. 오타를 수정하고, 문자열에 불필요한 join()을 제거합니다.
+        # 오타를 수정하고, 문자열에 불필요한 join()을 제거
         if final_sentence:
             print(f"\n--- Video Finished ---")
             print(f"Final Sentence: {final_sentence}")

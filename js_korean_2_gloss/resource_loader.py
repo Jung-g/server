@@ -2,6 +2,7 @@
 
 import os
 import csv
+from dotenv import load_dotenv
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 from transformers import BartForConditionalGeneration, PreTrainedTokenizerFast, T5ForConditionalGeneration, T5TokenizerFast
@@ -30,7 +31,7 @@ class ResourceManager:
         }
 
         # --- 모델 로딩 로직 (변경 없음) ---
-        print("\n[1/4] KoBART & KoT5 모델 로딩...")
+        print("\n[1/5] KoBART & KoT5 모델 로딩...")
         self.kobart_tokenizer = PreTrainedTokenizerFast.from_pretrained(self.PATHS["kobart_model"])
         self.kobart_model = BartForConditionalGeneration.from_pretrained(self.PATHS["kobart_model"])
         self.kot5_tokenizer = T5TokenizerFast.from_pretrained(self.PATHS["kot5_model"])
@@ -38,11 +39,11 @@ class ResourceManager:
         self.kobart_g2s_tokenizer = PreTrainedTokenizerFast.from_pretrained(self.PATHS["kobart_g2s_model"])
         self.kobart_g2s_model = BartForConditionalGeneration.from_pretrained(self.PATHS["kobart_g2s_model"])
 
-        print("\n[2/4] SBERT 계열 모델 5종 로딩...")
+        print("\n[2/5] SBERT 계열 모델 5종 로딩...")
         self.SBERT_MODELS = { "sbert": SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS"), "kosim_roberta": SentenceTransformer("BM-K/KoSimCSE-roberta"), "kosim_multitask": SentenceTransformer("BM-K/KoSimCSE-RoBERTa-multitask"), "bge_m3_korean": SentenceTransformer("upskyy/bge-m3-korean"), "ko_sroberta_multitask": SentenceTransformer("jhgan/ko-sroberta-multitask") }
         
         # --- [수정] 단어 사전 로딩 로직 변경 ---
-        print("\n[3/4] 단어 사전 로딩...")
+        print("\n[3/5] 단어 사전 로딩...")
         self.lemmas_set = self._initialize_lemma_data() # 새 함수 호출
         self.lemma_list = sorted(list(self.lemmas_set))
 
@@ -52,19 +53,20 @@ class ResourceManager:
         
                 # --- [추가] 3. Gemini API 설정 ---
         print("\n[5/5] Gemini API 설정...")
+        load_dotenv(dotenv_path="gemini.env")
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key:
             genai.configure(api_key=api_key)
-            print("  ✅ Gemini API 키가 성공적으로 설정되었습니다.")
+            print("Gemini API 키가 성공적으로 설정되었습니다.")
         else:
-            print("  ⚠️ 경고: GEMINI_API_KEY 환경변수가 설정되지 않았습니다. Gemini 호출이 실패할 수 있습니다.")
+            print("경고: GEMINI_API_KEY 환경변수가 설정되지 않았습니다. Gemini 호출이 실패할 수 있습니다.")
             
         print("\n모든 리소스 로딩 완료!")
         print("="*50)
 
     def _create_lemma_txt_from_csv(self, csv_path, txt_path):
         """[신규] 원본 CSV를 읽어 'kor' 열을 추출하고 TXT 파일로 저장하는 함수"""
-        print(f"  ⏳ 원본 CSV '{os.path.basename(csv_path)}'에서 단어 목록을 추출합니다...")
+        print(f"원본 CSV '{os.path.basename(csv_path)}'에서 단어 목록을 추출합니다...")
         lemmas_set = set()
         try:
             with open(csv_path, 'r', encoding='utf-8') as f_in:
@@ -80,13 +82,13 @@ class ResourceManager:
                 for word in sorted(list(lemmas_set)):
                     f_out.write(word + '\n')
             
-            print(f"  ✅ '{os.path.basename(txt_path)}' 생성 완료 (총 {len(lemmas_set)}개 단어).")
+            print(f"'{os.path.basename(txt_path)}' 생성 완료 (총 {len(lemmas_set)}개 단어).")
             return True
         except FileNotFoundError:
-            print(f"  🚨 오류: 원본 CSV 파일 '{csv_path}'를 찾을 수 없습니다!")
+            print(f"오류: 원본 CSV 파일 '{csv_path}'를 찾을 수 없습니다!")
             return False
         except Exception as e:
-            print(f"  🚨 오류: CSV 처리 중 에러 발생: {e}")
+            print(f"오류: CSV 처리 중 에러 발생: {e}")
             return False
 
     def _initialize_lemma_data(self):
@@ -95,10 +97,10 @@ class ResourceManager:
         target_txt_path = self.PATHS["lemma_txt"]
 
         if not os.path.exists(target_txt_path):
-            print(f"  ℹ️ 단어 목록 파일 '{os.path.basename(target_txt_path)}'이 없어 새로 생성합니다.")
+            print(f"단어 목록 파일 '{os.path.basename(target_txt_path)}'이 없어 새로 생성합니다.")
             creation_success = self._create_lemma_txt_from_csv(source_csv_path, target_txt_path)
             if not creation_success:
-                print("  🚨 단어 목록 생성 실패. 빈 목록으로 계속합니다.")
+                print("단어 목록 생성 실패. 빈 목록으로 계속합니다.")
                 return set()
 
         lemmas_set = set()
@@ -106,9 +108,9 @@ class ResourceManager:
             with open(target_txt_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     lemmas_set.add(line.strip())
-            print(f"  ✅ 단어 목록 파일 로딩 성공 (총 {len(lemmas_set)}개 단어).")
+            print(f"단어 목록 파일 로딩 성공 (총 {len(lemmas_set)}개 단어).")
         except FileNotFoundError:
-            print(f"  🚨 오류: 파일을 생성했음에도 '{os.path.basename(target_txt_path)}'를 찾을 수 없습니다.")
+            print(f"오류: 파일을 생성했음에도 '{os.path.basename(target_txt_path)}'를 찾을 수 없습니다.")
         return lemmas_set
 
     def _get_or_create_embeddings(self, model_name, cache_path):
@@ -117,12 +119,12 @@ class ResourceManager:
         try:
             lemma_list_cache, lemma_embeddings = torch.load(cache_path)
             if lemma_list_cache == self.lemma_list:
-                print(f"  ✅ '{model_name}' 모델 캐시 로딩 성공.")
+                print(f"'{model_name}' 모델 캐시 로딩 성공.")
                 return lemma_embeddings
             else:
-                print(f"  🔄 '{model_name}' 모델 캐시 새로 생성 (단어 목록 변경됨)")
+                print(f"'{model_name}' 모델 캐시 새로 생성 (단어 목록 변경됨)")
         except Exception:
-            print(f"  ℹ️ '{model_name}' 모델 캐시 없음 또는 오류. 새로 생성합니다.")
+            print(f"'{model_name}' 모델 캐시 없음 또는 오류. 새로 생성합니다.")
         
         lemma_embeddings = model.encode(self.lemma_list, convert_to_tensor=True, normalize_embeddings=True, show_progress_bar=True)
         torch.save((self.lemma_list, lemma_embeddings), cache_path)

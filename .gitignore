@@ -19,3 +19,7 @@ Thumbs.db
 # IDE 설정 파일
 .vscode/
 .idea/
+
+# 용량 초과 파일
+optimizer.pt
+*.safetensors

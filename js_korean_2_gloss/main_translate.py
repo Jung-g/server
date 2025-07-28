@@ -18,7 +18,7 @@ def process_sentence(text):
     translation = best_result['translation']
     avg_similarity = best_result['avg_similarity']
     
-    print(f"\n[✅ 선택된 모델] {model_name}")
+    print(f"\n[선택된 모델] {model_name}")
     print(f"[변환 결과] {translation}")
     print(f"[평균 유사도] {avg_similarity:.4f}")
     
@@ -34,7 +34,7 @@ def process_sentence(text):
     # --- [2단계 & 3단계: 유사어 검색 및 최종 선택] ---
     # 사전에 없는 단어가 있을 경우에만 실행합니다.
     if words_to_search:
-        print(f"👉 유사어 검색 필요 단어: {words_to_search}")
+        print(f"유사어 검색 필요 단어: {words_to_search}")
         search_results = sbert_kosimcse_search(words_to_search, topn=3)
 
         final_sentence_parts = []
@@ -58,7 +58,7 @@ def process_sentence(text):
     
     # 사전에 없는 단어가 없을 경우, 1차 변환 결과를 바로 반환합니다.
     else:
-        print("\n✅ 모든 단어가 사전에 존재하여 추가 검색 없이 변환을 완료합니다.")
+        print("\n모든 단어가 사전에 존재하여 추가 검색 없이 변환을 완료합니다.")
         return translation.split()
 
 def main_translate(text: str):
