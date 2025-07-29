@@ -54,7 +54,7 @@ class ResourceManager:
         self.SBERT_EMBEDDINGS = { "sbert": self._get_or_create_embeddings("sbert", self.PATHS["cache_sbert"]), "kosim_roberta": self._get_or_create_embeddings("kosim_roberta", self.PATHS["cache_kosim_roberta"]), "kosim_multitask": self._get_or_create_embeddings("kosim_multitask", self.PATHS["cache_kosim_multitask"]), "bge_m3_korean": self._get_or_create_embeddings("bge_m3_korean", self.PATHS["cache_bge_m3_korean"]), "ko_sroberta_multitask": self._get_or_create_embeddings("ko_sroberta_multitask", self.PATHS["cache_ko_sroberta_multitask"]), }
         
         print("\n[5/5] Ollama 로컬 모델 확인...")
-        self._initialize_ollama_model()
+        self.initialize_ollama_model()
             
         print("\n모든 리소스 로딩 완료!")
         print("="*50)
