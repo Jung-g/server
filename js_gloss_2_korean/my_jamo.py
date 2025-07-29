@@ -13,6 +13,13 @@ COMPOUND_TAILS = {
     ('ㄹ','ㅅ'):'ㄽ', ('ㄹ','ㅌ'):'ㄾ', ('ㄹ','ㅍ'):'ㄿ', ('ㄹ','ㅎ'):'ㅀ', ('ㅂ','ㅅ'):'ㅄ',
 }
 
+def contains_jamo(text: str) -> bool:
+    """문자열 안에 한글 자음 또는 모음(자모)이 포함되어 있는지 확인합니다."""
+    # [ㄱ-ㅎㅏ-ㅣ] : 한글 자음 또는 모음
+    # re.search()는 문자열의 어느 위치에서든 패턴이 일치하는지 찾습니다.
+    pattern = r'[ㄱ-ㅎㅏ-ㅣ]'
+    return bool(re.search(pattern, text))
+
 def is_jamo_or_numeric_only(text: str) -> bool:
     # ^: 문자열 시작, $: 문자열 끝
     # [ㄱ-ㅎㅏ-ㅣ\d\s]+: 자모(ㄱ-ㅎ, ㅏ-ㅣ), 숫자(\d), 공백(\s)이 하나 이상(+) 있는지 검사

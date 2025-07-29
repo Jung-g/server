@@ -74,12 +74,7 @@ async def translate_video_file(request: Request, response: Response, db: Session
     
         cap.release()
 
-        # 최종 문장 가져오기
-        # 박준수 수정 / 기존 final_sentence = recognizer.get_full_sentence()
-        semi_sentence = recognizer.get_full_sentence()
-        
-        final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
-        # -- 
+        final_sentence = recognizer.get_full_sentence()
         
     finally:
         if os.path.exists(temp_video_path):
@@ -141,14 +136,11 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     recognizer = user_recognizers[user_id]
     
     # Recognizer 객체에서 최종 문장 가져오기
-    final_sentence = recognizer.get_full_sentence()
+    
+    # 박준수 수정 - 번역
     semi_sentence = recognizer.get_full_sentence()
-    if len(semi_sentence) == 1:
-        if len(semi_sentence[0]) == 1:
-            final_sentence = semi_sentence
-            #한글자  ㄱ , '밥' 등등
-    else:
-        final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+    final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+    # ---
     
     if not final_sentence:
         return {
