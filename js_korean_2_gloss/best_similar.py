@@ -39,10 +39,9 @@ def find_best_candidate_iterative(search_results_for_word):
         print(f"  - 후보: {freq_candidates_str}")
 
         # 기준을 통과하는 후보들을 찾습니다.
-        passed_candidates = [(w, s) for w, s in words_by_freq[freq] if s >= 0.75]
+        passed_candidates = [(w, s) for w, s in sorted_candidates if s >= 0.75]
 
         if passed_candidates:
-            passed_candidates.sort(key=lambda x: x[1], reverse=True) # 점수 높은 순 정렬
             best_word, best_score = passed_candidates[0]
             result_details = {'word': best_word, 'score': best_score, 'frequency': freq}
             return result_details, f"성공 (빈도: {freq}, 평균점수≥0.75)"
@@ -56,10 +55,9 @@ def find_best_candidate_iterative(search_results_for_word):
         freq_candidates_str = ", ".join([f"'{w}'(점수:{s:.4f})" for w, s in sorted_candidates])
         print(f"  - 후보: {freq_candidates_str}")
 
-        passed_candidates = [(w, s) for w, s in words_by_freq[1] if s >= 0.8]
+        passed_candidates = [(w, s) for w, s in sorted_candidates if s >= 0.8]
 
         if passed_candidates:
-            passed_candidates.sort(key=lambda x: x[1], reverse=True)
             best_word, best_score = passed_candidates[0]
             result_details = {'word': best_word, 'score': best_score, 'frequency': 1}
             return result_details, "성공 (빈도: 1, 절대점수≥0.8)"
