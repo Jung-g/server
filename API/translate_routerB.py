@@ -75,7 +75,12 @@ async def translate_video_file(request: Request, response: Response, db: Session
         cap.release()
 
         # 최종 문장 가져오기
-        final_sentence = recognizer.get_full_sentence()
+        # 박준수 수정 / 기존 final_sentence = recognizer.get_full_sentence()
+        semi_sentence = recognizer.get_full_sentence()
+        
+        final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+        # -- 
+        
     finally:
         if os.path.exists(temp_video_path):
             os.unlink(temp_video_path) # 임시파일 삭제

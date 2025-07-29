@@ -72,13 +72,10 @@ import traceback
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
     
-# mBERT 이용해서 문장 -> list
+    # mBERT 이용해서 문장 -> list / 박준수 수정
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     try:
-        if len(word_text) != 1:
-            words = main_translate(word_text)
-        else:
-            words = [word_text]
+        words = main_translate(word_text)
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     
         motion_data = check_merge(words, send_type='api')
