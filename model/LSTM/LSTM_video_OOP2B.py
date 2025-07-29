@@ -276,7 +276,7 @@ class SignLanguageRecognizer:
         predicted_word, word_conf = self.predictor.predict_word(word_feats)
         predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
 
-        print(f"DEBUG: Word='{predicted_word}' (Conf: {word_conf:.2f}), Alphabet='{predicted_alphabet}' (Conf: {alphabet_conf:.2f})")
+        print(f"DEBUG: 인식한 단어='{predicted_word}' (Conf: {word_conf:.2f}), 인식한 지문자='{predicted_alphabet}' (Conf: {alphabet_conf:.2f})")
 
         newly_recognized_token = None
 
