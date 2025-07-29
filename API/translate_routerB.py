@@ -22,11 +22,19 @@ AUTH_KEY = os.getenv("DEEPL_API_KEY")
 #user_recognizers = {}
 user_recognizers = TTLCache(maxsize=100, ttl=300) 
 
-def serialize_result(r: deepl.TextResult):
-    return {
-        "text": r.text,
-        "원본언어": r.detected_source_lang,
-    }
+def serialize_result(r):
+    if isinstance(r, list):
+        combined_text = " ".join([item.text for item in r])
+        source_lang = r[0].detected_source_lang if r else None
+        return {
+            "text": combined_text,
+            "원본언어": source_lang
+        }
+    else:
+        return {
+            "text": r.text,
+            "원본언어": r.detected_source_lang
+        }
 
 def decode_base64_to_numpy(base64_string: str) -> np.ndarray:
     """Base64 문자열을 OpenCV 이미지(Numpy 배열)로 디코딩합니다."""
