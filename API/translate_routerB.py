@@ -141,33 +141,16 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     recognizer = user_recognizers[user_id]
     
     # Recognizer 객체에서 최종 문장 가져오기
-    # final_sentence = recognizer.get_full_sentence()
-    # semi_sentence = recognizer.get_full_sentence()
-    # if len(semi_sentence) == 1:
-    #     if len(semi_sentence[0]) == 1:
-    #         final_sentence = semi_sentence
-    #         #한글자  ㄱ , '밥' 등등
-    # else:
-    #     final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
-    
-    # if not final_sentence:
-    #     return {"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""}
-
-    # # DeepL 번역
-    # translator = deepl.Translator(AUTH_KEY)
-    # result = {
-    #     "korean": word,
-    #     "english": serialize_result(translator.translate_text(word, target_lang="EN-US")),
-    #     "japanese": serialize_result(translator.translate_text(word, target_lang="JA")),
-    #     "chinese": serialize_result(translator.translate_text(word, target_lang="ZH")),
-    # }
-    
-    if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
-        word = recognizer.sentence_words[-1]
+    final_sentence = recognizer.get_full_sentence()
+    semi_sentence = recognizer.get_full_sentence()
+    if len(semi_sentence) == 1:
+        if len(semi_sentence[0]) == 1:
+            final_sentence = semi_sentence
+            #한글자  ㄱ , '밥' 등등
     else:
-        word = None
+        final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
     
-    if not word:
+    if not final_sentence:
         return {
             "korean": "인식된 단어가 없습니다.",
             "english": {"text": "", "원본언어": "KO"},
@@ -178,11 +161,33 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     # DeepL 번역
     translator = deepl.Translator(AUTH_KEY)
     result = {
-        "korean": word,
-        "english": serialize_result(translator.translate_text(word, target_lang="EN-US")),
-        "japanese": serialize_result(translator.translate_text(word, target_lang="JA")),
-        "chinese": serialize_result(translator.translate_text(word, target_lang="ZH")),
+        "korean": final_sentence,
+        "english": serialize_result(translator.translate_text(final_sentence, target_lang="EN-US")),
+        "japanese": serialize_result(translator.translate_text(final_sentence, target_lang="JA")),
+        "chinese": serialize_result(translator.translate_text(final_sentence, target_lang="ZH")),
     }
+    
+    # if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
+    #     word = recognizer.sentence_words[-1]
+    # else:
+    #     word = None
+    
+    # if not word:
+    #     return {
+    #         "korean": "인식된 단어가 없습니다.",
+    #         "english": {"text": "", "원본언어": "KO"},
+    #         "japanese": {"text": "", "원본언어": "KO"},
+    #         "chinese": {"text": "", "원본언어": "KO"},
+    #     }
+
+    # # DeepL 번역
+    # translator = deepl.Translator(AUTH_KEY)
+    # result = {
+    #     "korean": word,
+    #     "english": serialize_result(translator.translate_text(word, target_lang="EN-US")),
+    #     "japanese": serialize_result(translator.translate_text(word, target_lang="JA")),
+    #     "chinese": serialize_result(translator.translate_text(word, target_lang="ZH")),
+    # }
 
     # 다음 문장 인식을 위해 해당 유저의 Recognizer 상태 초기화
     recognizer.reset()
