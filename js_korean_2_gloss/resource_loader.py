@@ -1,16 +1,10 @@
-# resource_loader.py
-
 import os
 import csv
-from dotenv import load_dotenv
-import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 from transformers import BartForConditionalGeneration, PreTrainedTokenizerFast, T5ForConditionalGeneration, T5TokenizerFast
 import torch
-# 박준수 추가
 import ollama  
 import sys     
-# --
 
 class ResourceManager:
     def __init__(self):

@@ -1,7 +1,5 @@
-# hong_translate_main.py
-
-from my_jamo import preprocess_input, assemble_jamos, is_jamo_or_numeric_only, contains_jamo
-from ollama_translate import ollama_translate_control
+from .my_jamo import preprocess_input, assemble_jamos, is_jamo_or_numeric_only, contains_jamo
+from .ollama_translate import ollama_translate_control
 
 def translate_pipeline(raw_text_list: list) -> list:
     """
