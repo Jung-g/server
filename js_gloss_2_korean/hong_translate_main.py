@@ -1,16 +1,14 @@
 from .my_jamo import preprocess_input, assemble_jamos, is_jamo_or_numeric_only, contains_jamo
 from .ollama_translate import ollama_translate_control
 
-def translate_pipeline(raw_text_list: list) -> list:
+def translate_pipeline(raw_text: str) -> list:
     """
     하나의 문장을 받아 전체 파이프라인을 실행하고,
     최종적으로 완성된 문장 '하나'를 문자열로 반환합니다.
     """
-    if not raw_text_list:
-        return []
-    
-    raw_text = raw_text_list[0]
-    
+    if not raw_text:
+        return ""
+        
     if is_jamo_or_numeric_only(raw_text):
         print(f"입력된 문장 : {raw_text} -> 자모 또는 숫자만 포함되어 변환을 건너뜁니다.")
         return [raw_text]

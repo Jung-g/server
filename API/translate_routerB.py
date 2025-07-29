@@ -147,7 +147,10 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
     
     # 박준수 수정 - 번역
     semi_sentence = recognizer.get_full_sentence()
+    print(type(semi_sentence))
+    print(f"디버깅용 semi_sentence: {semi_sentence}")
     final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+    print(f"디버깅용 semi_sentence: {final_sentence}")
     # ---
     
     if not final_sentence:

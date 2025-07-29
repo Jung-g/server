@@ -2,13 +2,14 @@ import os
 import tempfile
 from dotenv import load_dotenv
 import deepl
+import traceback
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from DB_Table import Word
 from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
-from js_korean_2_gloss import main_translate
+from js_korean_2_gloss.main_translate import main_translate
 from model.LSTM.LSTM_video_OOP2A import SignLanguageRecognizer, CONFIG
 
 router = APIRouter()
@@ -66,7 +67,6 @@ async def translate_sign_to_text(request: Request, response: Response, expected_
         "match": is_match,
     }
 
-import traceback
 # --- 텍스트 → 수어 (기존 코드 유지) ---
 @router.get("/translate/text_to_sign")
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
@@ -75,7 +75,11 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
     # mBERT 이용해서 문장 -> list / 박준수 수정
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     try:
-        words = main_translate(word_text)
+        translator = deepl.Translator(AUTH_KEY)
+        result = translator.translate_text(word_text, target_lang="KO")
+        korean_words = result.text
+        print(f"[DEBUG] Deepl 번역: {word_text} -> {korean_words}")
+        words = main_translate(korean_words)
     # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     
         motion_data = check_merge(words, send_type='api')

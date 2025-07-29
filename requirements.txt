@@ -20,3 +20,4 @@ tqdm
 transformers
 sentence-transformers
 ollama
+tensorflow
