@@ -170,7 +170,7 @@
 #     translator = deepl.Translator(AUTH_KEY)
 #     result = {
 #         "korean": top_word,
-#         "english": translator.translate_text(top_word, target_lang="EN-US").text,
+#         # "english": translator.translate_text(top_word, target_lang="EN-US").text,
 #         "japanese": translator.translate_text(top_word, target_lang="JA").text,
 #         "chinese": translator.translate_text(top_word, target_lang="ZH").text,
 #     }

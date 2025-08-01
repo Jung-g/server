@@ -80,6 +80,7 @@ async def translate_video_file(
     os.unlink(temp_video_path) # 임시 파일 삭제
 
     # 5. 최종 문장 가져오기
+    
     final_sentence = recognizer.get_full_sentence()
     
     if not final_sentence:
@@ -121,7 +122,6 @@ async def analyze_frames(request: Request, response: Response, frames: List[str]
         
         frame_np = cv2.flip(frame_np, 1)
 
-        
         # 프레임 하나를 처리하고, 새로 인식된 단어가 있으면 리스트에 추가
         result = recognizer.process_frame(frame_np)
         if result:
