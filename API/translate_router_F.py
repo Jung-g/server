@@ -267,6 +267,7 @@ async def translate_latest(request: Request, response: Response, db: Session = D
 
     try:
         translator = deepl.Translator(AUTH_KEY)
+        final_sentence = '사과'
         result = {
             "korean": final_sentence,
             "english": serialize_result(translator.translate_text(final_sentence, target_lang="EN-US")),
@@ -276,3 +277,38 @@ async def translate_latest(request: Request, response: Response, db: Session = D
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
+    
+@router.get("/study/translate_latest")
+def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
+    user_id = verify_or_refresh_token(request, response)
+
+    if user_id not in user_recognizers:
+        return {
+            "korean": "인식된 단어가 없습니다.",
+        }
+
+    recognizer = user_recognizers[user_id]
+    
+    # Recognizer 객체에서 최종 문장 가져오기
+    # final_sentence = recognizer.get_full_sentence()
+    # semi_sentence = recognizer.get_semi_sentence()
+    # final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+
+    if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
+        word = recognizer.sentence_words[-1]
+    else:
+        word = None
+    
+    if not word:
+        return {
+            "korean": "인식된 단어가 없습니다.",
+        }
+    result = {
+        "korean": word,
+    }
+    
+    # 다음 문장 인식을 위해 해당 유저의 Recognizer 상태 초기화
+    recognizer.reset()
+    print(f"--- Recognizer for user {user_id} has been reset. ---")
+
+    return result
