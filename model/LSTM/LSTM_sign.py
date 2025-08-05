@@ -15,7 +15,7 @@ CONFIG = {
     "SEQ_LEN_ALPHABET": 10,
     "CONF_THRESHOLD_ALPHABET": 0.78,
     "IDLE_TIME_SECS": 1.8,
-    "MOVEMENT_THRESHOLD": 0.6,
+    "MOVEMENT_THRESHOLD": 0.5,
 }
 
 class FeatureExtractor:
@@ -158,9 +158,14 @@ class Predictor:
         if confidence_item < self.config['CONF_THRESHOLD_WORD']: return None, 0.0
         label = self.word_labels_map.get(idx.item(), "Unknown")
         self.word_history.append(label)
-        if len(self.word_history) > self.config['STABLE_THRESHOLD_WORD']: self.word_history.pop(0)
-        if len(self.word_history) == self.config['STABLE_THRESHOLD_WORD'] and len(set(self.word_history)) == 1:
-            return self.word_history[0], confidence_item
+        # if len(self.word_history) > self.config['STABLE_THRESHOLD_WORD']: self.word_history.pop(0)
+        # if len(self.word_history) == self.config['STABLE_THRESHOLD_WORD'] and len(set(self.word_history)) == 1:
+        #     return self.word_history[0], confidence_item
+        if len(self.word_history) >= self.config['STABLE_THRESHOLD_WORD']:
+            last_k = self.word_history[-self.config['STABLE_THRESHOLD_WORD']:]
+            if len(set(last_k)) == 1:
+                return last_k[0], confidence_item
+
         return None, 0.0
 
     def predict_fingerspelling(self, features):

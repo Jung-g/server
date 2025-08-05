@@ -201,7 +201,7 @@ async def analyze_frames(
             height, width, _ = frame_np.shape
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             # 클라이언트가 약 15fps로 보내므로, 저장할 비디오의 fps를 15로 설정
-            writer = cv2.VideoWriter(filename, fourcc, 15.0, (width, height))
+            writer = cv2.VideoWriter(filename, fourcc, 30, (width, height))
             user_video_writers[user_id] = writer
             print(f"--- Start recording debug video for user '{user_id}' to '{filename}' ---")
         
@@ -267,7 +267,6 @@ async def translate_latest(request: Request, response: Response, db: Session = D
 
     try:
         translator = deepl.Translator(AUTH_KEY)
-        final_sentence = '사과'
         result = {
             "korean": final_sentence,
             "english": serialize_result(translator.translate_text(final_sentence, target_lang="EN-US")),

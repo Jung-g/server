@@ -129,3 +129,45 @@ async def complete_study(request: Request, response: Response, req: StudyComplet
 
     db.commit()
     return {"success": True}
+
+# 학습 완료한 step5만 가져오기
+@router.get("/study/review_words")
+def get_review_step5_words(request: Request, response: Response, db: Session = Depends(get_db)):
+    user_id = verify_or_refresh_token(request, response)
+
+    # 사용자가 step 5 완료한 sid만 가져오기
+    completed_sids = (
+        db.query(StudyRecord.SID)
+        .filter(StudyRecord.UserID == user_id, StudyRecord.Step == 5, StudyRecord.Complate == True)
+        .distinct()
+        .all()
+    )
+    sid_list = [sid for (sid,) in completed_sids]
+
+    if not sid_list:
+        return []
+
+    # 해당 SID들의 Step 5에 등록된 단어(WID), 단어명, 코스명 반환
+    results = (
+        db.query(StudyStep, Word, Study)
+        .join(Word, StudyStep.WID == Word.WID)
+        .join(Study, Study.SID == StudyStep.SID)
+        .filter(
+            StudyStep.Step == 5,
+            StudyStep.SID.in_(sid_list)
+        )
+        .order_by(StudyStep.SID, StudyStep.WordOrder)
+        .all()
+    )
+
+    response_data = []
+    for step, word, study in results:
+        response_data.append({
+            "wid": word.WID,
+            "word": word.Word,
+            "step": step.Step,
+            "sid": step.SID,
+            "course": study.Study_Course,
+        })
+
+    return response_data

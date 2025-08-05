@@ -1,15 +1,18 @@
+# import datetime
 # import os
 # import tempfile
+# from cachetools import TTLCache
 # import cv2
 # from dotenv import load_dotenv
 # import mediapipe as mp
 # import deepl
 # from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile, Body
 # from sqlalchemy.orm import Session
-# from model.LSTM.LSTM import build_sequence_from_frames, predict_sign_language, result
-# from model.LSTM.LSTM_sentence import run_sentence_model
-# from model.LSTM.LSTM_video import run_model
-# from models import Word
+# # from model.LSTM.LSTM import build_sequence_from_frames, predict_sign_language, result
+# # from model.LSTM.LSTM_sentence import run_sentence_model
+# # from model.LSTM.LSTM_video import run_model
+# from API.translate_router_F import serialize_result
+# from DB_Table import Word
 # from core_method import get_db, verify_or_refresh_token
 
 # mp_pose = mp.solutions.pose
@@ -21,82 +24,82 @@
 # AUTH_KEY = os.getenv("DEEPL_API_KEY")
 # VIDEO_DIR = "video"
 
-# # 수어 → 텍스트 → 번역
-# # @router.post("/translate/sign_to_text")
-# # async def translate_sign_to_text(request: Request, response: Response,file: UploadFile = File(...), db: Session = Depends(get_db)):
-# #     user_id = verify_or_refresh_token(request, response)
+# # # 수어 → 텍스트 → 번역
+# # # @router.post("/translate/sign_to_text")
+# # # async def translate_sign_to_text(request: Request, response: Response,file: UploadFile = File(...), db: Session = Depends(get_db)):
+# # #     user_id = verify_or_refresh_token(request, response)
     
+# # #     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+# # #         tmp.write(await file.read())
+# # #         tmp_path = tmp.name
+# # #     print(tmp_path)
+
+# # #     recognized_korean = run_model(tmp_path)
+
+# # #     print("최종 예측 결과:", recognized_korean)
+
+# # #     word_text = recognized_korean
+# # #     if (word_text == '학습되지 않은 동작입니다' or word_text == "인식실패 다시 시도해주세요"):
+# # #         return {"korean": word_text}
+    
+# # #     translator = deepl.Translator(AUTH_KEY)
+# # #     english = translator.translate_text(word_text, target_lang="EN-US").text
+# # #     chinese = translator.translate_text(word_text, target_lang="ZH-HANS").text
+# # #     japanese = translator.translate_text(word_text, target_lang="JA").text
+
+# # #     return {
+# # #         "korean": word_text,
+# # #         "english": english,
+# # #         "chinese": chinese,
+# # #         "japanese": japanese
+# # #     }
+# # @router.post("/translate/sign_to_text")
+# # async def translate_sign_to_text(request: Request, response: Response, expected_word: str = Form(...), file: UploadFile = File(...), db: Session = Depends(get_db)):
+# #     user_id = verify_or_refresh_token(request, response)
+
 # #     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
 # #         tmp.write(await file.read())
 # #         tmp_path = tmp.name
-# #     print(tmp_path)
 
-# #     recognized_korean = run_model(tmp_path)
+# #     predicted_word = run_model(tmp_path)
+# #     print("예측 결과:", predicted_word)
+# #     print("사용자 정답:", expected_word)
 
-# #     print("최종 예측 결과:", recognized_korean)
+# #     is_match = (predicted_word == expected_word)
 
-# #     word_text = recognized_korean
-# #     if (word_text == '학습되지 않은 동작입니다' or word_text == "인식실패 다시 시도해주세요"):
-# #         return {"korean": word_text}
-    
-# #     translator = deepl.Translator(AUTH_KEY)
-# #     english = translator.translate_text(word_text, target_lang="EN-US").text
-# #     chinese = translator.translate_text(word_text, target_lang="ZH-HANS").text
-# #     japanese = translator.translate_text(word_text, target_lang="JA").text
+# #     if predicted_word in ['학습되지 않은 동작입니다', '인식실패 다시 시도해주세요']:
+# #         return {
+# #             "korean": predicted_word,
+# #             "match": False,
+# #         }
 
 # #     return {
-# #         "korean": word_text,
-# #         "english": english,
-# #         "chinese": chinese,
-# #         "japanese": japanese
+# #         "korean": predicted_word,
+# #         "match": is_match,
 # #     }
-# @router.post("/translate/sign_to_text")
-# async def translate_sign_to_text(request: Request, response: Response, expected_word: str = Form(...), file: UploadFile = File(...), db: Session = Depends(get_db)):
-#     user_id = verify_or_refresh_token(request, response)
-
-#     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-#         tmp.write(await file.read())
-#         tmp_path = tmp.name
-
-#     predicted_word = run_model(tmp_path)
-#     print("예측 결과:", predicted_word)
-#     print("사용자 정답:", expected_word)
-
-#     is_match = (predicted_word == expected_word)
-
-#     if predicted_word in ['학습되지 않은 동작입니다', '인식실패 다시 시도해주세요']:
-#         return {
-#             "korean": predicted_word,
-#             "match": False,
-#         }
-
-#     return {
-#         "korean": predicted_word,
-#         "match": is_match,
-#     }
 
 
-# # 텍스트 → 수어 애니메이션
-# @router.get("/translate/text_to_sign")
-# async def get_sign_animation(request: Request, response: Response,word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
-#     user_id = verify_or_refresh_token(request, response)
+# # # 텍스트 → 수어 애니메이션
+# # @router.get("/translate/text_to_sign")
+# # async def get_sign_animation(request: Request, response: Response,word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
+# #     user_id = verify_or_refresh_token(request, response)
     
-#     word = db.query(Word).filter(Word.Word == word_text).first()
-#     # if not word or not word.animations:
-#     #     raise HTTPException(status_code=404, detail="애니메이션이 존재하지 않습니다.")
+# #     word = db.query(Word).filter(Word.Word == word_text).first()
+# #     # if not word or not word.animations:
+# #     #     raise HTTPException(status_code=404, detail="애니메이션이 존재하지 않습니다.")
 
-#     clean_word = word.Word.strip().replace("'", "").replace('"', "")
-#     file_name = f"{clean_word}.mp4"
-#     file_path = os.path.join(VIDEO_DIR, file_name)
+# #     clean_word = word.Word.strip().replace("'", "").replace('"', "")
+# #     file_name = f"{clean_word}.mp4"
+# #     file_path = os.path.join(VIDEO_DIR, file_name)
 
-#     if os.path.isfile(file_path):
-#         video_url = f"http://10.101.92.18/video/{file_name}"
-#     else:
-#         video_url = "" 
+# #     if os.path.isfile(file_path):
+# #         video_url = f"http://10.101.92.18/video/{file_name}"
+# #     else:
+# #         video_url = "" 
 
-#     return {
-#         "URL": video_url
-#     }
+# #     return {
+# #         "URL": video_url
+# #     }
 
 
 # # 속도 개선 테스트
@@ -111,16 +114,38 @@
 # user_prediction_history = defaultdict(list)
 # user_latest_prediction = defaultdict(tuple)  # (word, confidence)
 
+# # --- 비디오 저장 로직 추가 ---
+# # 각 사용자별 비디오 파일을 관리하기 위한 캐시
+# user_video_writers = TTLCache(maxsize=100, ttl=300)
+# DEBUG_VIDEO_DIR = "debug_videos"
+# os.makedirs(DEBUG_VIDEO_DIR, exist_ok=True) # 저장할 폴더 생성
+
 # # 프레임 전송받아서 실시간으로 수어 -> 한글 단어 번역
 # @router.post("/translate/analyze_frames")
 # async def analyze_frames(request: Request, response: Response, frames: List[str] = Body(..., embed=True), db: Session = Depends(get_db)):
 #     user_id = verify_or_refresh_token(request, response)
-
+#     print(f"\n[ROUTER|/analyze_frames] User '{user_id}' sent a batch of {len(frames)} frames.")
 #     for base64_frame in frames:
 #         frame_np = decode_base64_to_numpy(base64_frame)
 #         feature = extract_features_from_frame(frame_np)
 #         if feature is None:
 #             continue
+
+#         # --- 비디오 저장 로직 추가 ---
+#         if user_id not in user_video_writers:
+#             # 해당 유저의 첫 프레임이면 비디오 파일 생성
+#             now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+#             filename = os.path.join(DEBUG_VIDEO_DIR, f"{user_id}_{now}.mp4")
+#             height, width, _ = frame_np.shape
+#             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#             # 클라이언트가 약 15fps로 보내므로, 저장할 비디오의 fps를 15로 설정
+#             writer = cv2.VideoWriter(filename, fourcc, 5, (width, height))
+#             user_video_writers[user_id] = writer
+#             print(f"--- Start recording debug video for user '{user_id}' to '{filename}' ---")
+        
+#         # 프레임을 비디오 파일에 쓰기
+#         user_video_writers[user_id].write(frame_np)
+#         # -----------------------------
 
 #         buffer = user_keypoints[user_id]
 #         if buffer:
@@ -154,25 +179,34 @@
 # def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
 #     user_id = verify_or_refresh_token(request, response)
 
+#     # --- 비디오 저장 로직 추가 ---
+#     # 번역 요청이 오면 비디오 녹화 종료
+#     if user_id in user_video_writers:
+#         writer = user_video_writers[user_id]
+#         writer.release()
+#         print(f"--- Finished recording debug video for user '{user_id}' ---")
+#         del user_video_writers[user_id]
+#     # -----------------------------
+
 #     history = user_prediction_history.get(user_id, [])
 #     high_confidence = [pred for pred, conf in history if conf >= 70.0]
 
 #     if not high_confidence:
 #         return {
 #             "korean": "신뢰도 70% 이상 결과 없음",
-#             "english": "",
-#             "japanese": "",
-#             "chinese": ""
+#             "english": {"text": "", "원본언어": "KO"},
+#             "japanese": {"text": "", "원본언어": "KO"},
+#             "chinese": {"text": "", "원본언어": "KO"},
 #         }
 
 #     top_word, _ = Counter(high_confidence).most_common(1)[0]
-
+    
 #     translator = deepl.Translator(AUTH_KEY)
 #     result = {
 #         "korean": top_word,
-#         "english": translator.translate_text(top_word, target_lang="EN-US").text,
-#         "japanese": translator.translate_text(top_word, target_lang="JA").text,
-#         "chinese": translator.translate_text(top_word, target_lang="ZH").text,
+#         "english": serialize_result(translator.translate_text(top_word, target_lang="EN-US")),
+#         "japanese": serialize_result(translator.translate_text(top_word, target_lang="JA")),
+#         "chinese": serialize_result(translator.translate_text(top_word, target_lang="ZH")),
 #     }
 
 #     user_prediction_history[user_id].clear()
