@@ -17,6 +17,8 @@ import base64
 from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
 
+from js_gloss_2_korean.hong_translate_main import translate_pipeline
+from js_korean_2_gloss.main_translate import main_translate
 from model.LSTM.LSTM_sign import CONFIG, SignLanguageRecognizer
 
 # --- 기본 설정 ---
@@ -32,8 +34,21 @@ user_video_writers = TTLCache(maxsize=100, ttl=300)
 DEBUG_VIDEO_DIR = "debug_videos"
 os.makedirs(DEBUG_VIDEO_DIR, exist_ok=True) # 저장할 폴더 생성
 
+# 번역 결과 직렬화
+def serialize_result(r):
+    if isinstance(r, list):
+        combined_text = " ".join([item.text for item in r])
+        source_lang = r[0].detected_source_lang if r else None
+        return {
+            "text": combined_text,
+            "원본언어": source_lang
+        }
+    else:
+        return {
+            "text": r.text,
+            "원본언어": r.detected_source_lang
+        }
 
-# --- API 엔드포인트 구현 ---
 
 @router.post("/translate/sign_to_text")
 async def sign_to_text_handler(
@@ -107,26 +122,39 @@ async def sign_to_text_handler(
 
 
 @router.get("/translate/text_to_sign")
-async def get_sign_animation(
-    request: Request,
-    response: Response,
-    word_text: str = Query(..., description="입력된 한국어 단어 또는 문장"),
-    db: Session = Depends(get_db)
-):
-    """텍스트를 받아 대응하는 수어 애니메이션 프레임 데이터를 반환합니다."""
+async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
-    words = word_text.strip().split()
     
+    # mBERT 이용해서 문장 -> list / 박준수 수정
+    # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     try:
+        translator = deepl.Translator(AUTH_KEY)
+        result = translator.translate_text(word_text, target_lang="KO")
+        korean_words = result.text
+        print(f"[DEBUG] Deepl 번역: {word_text} -> {korean_words}")
+        words = main_translate(korean_words)
+    # ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+    
         motion_data = check_merge(words, send_type='api')
-        frame_generator = api_motion_merge(*motion_data)
-        frame_list = list(frame_generator)
-        print(f"    [ROUTER|Result] Generated {len(frame_list)} animation frames.")
-        return JSONResponse(content={"frames": frame_list})
-    except Exception as e:
-        print(f"[ERROR] text_to_sign 에러 발생: {e}")
+    except ValueError as e:
+        print("[ERROR] check_merge 에러 발생:", e)
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500, 
+            detail=f'{e}' # 클라이언트에게 보여줄 메시지
+        )
+    except Exception as e:
+        print("[ERROR] 에상치 못한 에러 발생:", e)
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail=f'{e}' # 클라이언트에게 보여줄 메시지
+        )
+        
+    frame_generator = api_motion_merge(*motion_data)
+    frame_list = list(frame_generator)
+
+    return JSONResponse(content={"frames": frame_list})
 
 
 # --- 실시간 스트리밍 관련 엔드포인트 ---
@@ -191,15 +219,17 @@ async def analyze_frames(
 
 
 @router.get("/translate/translate_latest")
-async def translate_latest(
-    request: Request, response: Response, db: Session = Depends(get_db)
-):
+async def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
     """실시간으로 분석된 최종 문장을 가져오고 번역합니다."""
     user_id = verify_or_refresh_token(request, response)
 
     if user_id not in user_recognizers:
-        return JSONResponse(content={"korean": "분석된 내용이 없습니다.", "english": "", "japanese": "", "chinese": ""})
-    
+        return {
+            "korean": "인식된 단어가 없습니다.",
+            "english": {"text": "", "원본언어": "KO"},
+            "japanese": {"text": "", "원본언어": "KO"},
+            "chinese": {"text": "", "원본언어": "KO"},
+        }
     
     # --- 비디오 저장 로직 추가 ---
     # 번역 요청이 오면 비디오 녹화 종료
@@ -211,7 +241,13 @@ async def translate_latest(
     # -----------------------------
 
     recognizer = user_recognizers[user_id]
-    final_sentence = recognizer.get_full_sentence()
+    # 박준수 수정 - 번역
+    semi_sentence = recognizer.get_full_sentence()
+    print(type(semi_sentence))
+    print(f"디버깅용 semi_sentence: {semi_sentence}")
+    final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+    print(f"디버깅용 semi_sentence: {final_sentence}")
+    # ---
     
     print(f"    [ROUTER|Result] Retrieved sentence: '{final_sentence}'. Resetting state for user.")
 
@@ -222,18 +258,21 @@ async def translate_latest(
     print(f"--- Recognizer for user {user_id} has been reset and removed from cache. ---")
 
     if not final_sentence:
-        return JSONResponse(content={"korean": "인식된 단어가 없습니다.", "english": "", "japanese": "", "chinese": ""})
-
-
-    return JSONResponse(content={"korean": final_sentence})
+        return {
+            "korean": "인식된 단어가 없습니다.",
+            "english": {"text": "", "원본언어": "KO"},
+            "japanese": {"text": "", "원본언어": "KO"},
+            "chinese": {"text": "", "원본언어": "KO"},
+        }
 
     try:
         translator = deepl.Translator(AUTH_KEY)
-        return JSONResponse(content={
+        result = {
             "korean": final_sentence,
-            "english": translator.translate_text(final_sentence, target_lang="EN-US").text,
-            "japanese": translator.translate_text(final_sentence, target_lang="JA").text,
-            "chinese": translator.translate_text(final_sentence, target_lang="ZH").text,
-        })
+            "english": serialize_result(translator.translate_text(final_sentence, target_lang="EN-US")),
+            "japanese": serialize_result(translator.translate_text(final_sentence, target_lang="JA")),
+            "chinese": serialize_result(translator.translate_text(final_sentence, target_lang="ZH")),
+        }
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
