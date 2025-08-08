@@ -23,3 +23,5 @@ Thumbs.db
 # 용량 초과 파일
 optimizer.pt
 *.safetensors
+
+debug_videos/
