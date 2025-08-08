@@ -9,13 +9,14 @@ import os
 
 CONFIG = {
     "MODEL_DIR": "./model",
-    "SEQ_LEN_WORD": 45,
+    "SEQ_LEN_WORD": 60,
+    "OVERLAP_LEN_WORD" : 40,
     "STABLE_THRESHOLD_WORD": 1,
-    "CONF_THRESHOLD_WORD": 0.85,
+    "CONF_THRESHOLD_WORD": 0.89,
     "SEQ_LEN_ALPHABET": 10,
-    "CONF_THRESHOLD_ALPHABET": 0.78,
-    "IDLE_TIME_SECS": 1.8,
-    "MOVEMENT_THRESHOLD": 0.5,
+    "CONF_THRESHOLD_ALPHABET": 0.89,
+    "IDLE_TIME_SECS": 1.2,
+    "MOVEMENT_THRESHOLD": 10.0,
 }
 
 class FeatureExtractor:
@@ -139,7 +140,7 @@ class Predictor:
 
     def predict_word(self, features):
         self.word_buffer.append(features)
-        if len(self.word_buffer) > self.config['SEQ_LEN_WORD']: self.word_buffer.popleft()
+        #if len(self.word_buffer) > self.config['SEQ_LEN_WORD']: self.word_buffer.popleft()
         if len(self.word_buffer) < self.config['SEQ_LEN_WORD']: return None, 0.0
 
         sequence = np.array(list(self.word_buffer))
@@ -150,6 +151,11 @@ class Predictor:
             probabilities = torch.softmax(self.word_model(input_tensor), dim=1)
         confidence, idx = torch.max(probabilities, 1)
         confidence_item = confidence.item()
+
+        hop_size = self.config['SEQ_LEN_WORD'] - self.config['OVERLAP_LEN_WORD']
+        for _ in range(hop_size):
+            if self.word_buffer:  
+                self.word_buffer.popleft()
         
         # 디버깅용 출력
         label_for_debug = self.word_labels_map.get(idx.item(), "Unknown")
@@ -262,9 +268,10 @@ class SignLanguageRecognizer:
             self.idle_counter = 0
 
         if self.idle_counter >= self.IDLE_TIME_THRESHOLD_FRAMES:
-            if self.sentence_words:
-                print(f"IDLE - Resetting sentence: {' '.join(self.sentence_words)}")
-            self.reset()
+            #if self.sentence_words:
+            #    print(f"IDLE - Resetting sentence: {' '.join(self.sentence_words)}")
+            #self.reset()
+            self.predictor.reset_word_buffer()
             return None
 
         predicted_word, word_conf = self.predictor.predict_word(word_feats)
@@ -315,8 +322,6 @@ class SignLanguageRecognizer:
                 break
             
             frame_idx += 1
-            
-            
             
             if frame_idx % 100 == 0:
                 print(f"    [ℹ️] Processing video file... Frame {frame_idx}")

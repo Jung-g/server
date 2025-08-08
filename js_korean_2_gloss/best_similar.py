@@ -39,7 +39,7 @@ def find_best_candidate_iterative(search_results_for_word):
         print(f"  - 후보: {freq_candidates_str}")
 
         # 기준을 통과하는 후보들을 찾습니다.
-        passed_candidates = [(w, s) for w, s in sorted_candidates if s >= 0.75]
+        passed_candidates = [(w, s) for w, s in sorted_candidates if s >= 0.7]
 
         if passed_candidates:
             best_word, best_score = passed_candidates[0]
@@ -55,7 +55,7 @@ def find_best_candidate_iterative(search_results_for_word):
         freq_candidates_str = ", ".join([f"'{w}'(점수:{s:.4f})" for w, s in sorted_candidates])
         print(f"  - 후보: {freq_candidates_str}")
 
-        passed_candidates = [(w, s) for w, s in sorted_candidates if s >= 0.8]
+        passed_candidates = [(w, s) for w, s in sorted_candidates if s >= 0.7]
 
         if passed_candidates:
             best_word, best_score = passed_candidates[0]

@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 import traceback
@@ -9,7 +10,7 @@ import numpy as np
 from cachetools import TTLCache
 from dotenv import load_dotenv
 from fastapi import (APIRouter, Body, Depends, File, Form, HTTPException, Query,
-                     Request, Response, UploadFile)
+                     Request, Response, UploadFile, WebSocket)
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import base64
@@ -79,6 +80,13 @@ async def sign_to_text_handler(
         tmp.write(await file.read())
         video_path = tmp.name
 
+    # 디버그용 영상 저장
+    now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    debug_path = os.path.join(DEBUG_VIDEO_DIR, f"{user_id}_{now}.mp4")
+    with open(video_path, "rb") as src, open(debug_path, "wb") as dst:
+        dst.write(src.read())
+    print(f"[DEBUG] 영상이 debug_videos 디렉토리에 저장됨: {debug_path}")
+
     # 요청마다 새로운 Recognizer 인스턴스를 생성하여 요청 간 상태가 섞이지 않도록 합니다.
     recognizer = SignLanguageRecognizer(CONFIG)
     
@@ -104,21 +112,17 @@ async def sign_to_text_handler(
         # B타입 (번역) 요청 처리
         print(f"    [ROUTER|Result] Predicted Sentence: '{predicted_text}'")
         if not predicted_text or predicted_text in ['학습되지 않은 동작입니다', '인식실패 다시 시도해주세요']:
-            return JSONResponse(content={
-                "korean": predicted_text or "인식된 단어가 없습니다.",
-                "english": "", "japanese": "", "chinese": ""
-            })
-
-        try:
-            translator = deepl.Translator(AUTH_KEY)
-            return JSONResponse(content={
+            return {
                 "korean": predicted_text,
-                "english": translator.translate_text(predicted_text, target_lang="EN-US").text,
-                "japanese": translator.translate_text(predicted_text, target_lang="JA").text,
-                "chinese": translator.translate_text(predicted_text, target_lang="ZH").text,
-            })
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
+                "english": {"text": "", "원본언어": "KO"},
+                "japanese": {"text": "", "원본언어": "KO"},
+                "chinese": {"text": "", "원본언어": "KO"},
+            }
+
+        recognizer.sentence_words.append(predicted_text)
+        user_recognizers[user_id] = recognizer
+
+        return {"success": True,}
 
 
 @router.get("/translate/text_to_sign")
@@ -156,43 +160,33 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
 
     return JSONResponse(content={"frames": frame_list})
 
+# 속도 개선 테스트
+import numpy as np
+from typing import List
+from collections import Counter
+from collections import defaultdict, deque
+from model.LSTM.LSTM_frame import decode_base64_to_numpy, extract_features_from_frame, predict_with_model, SEQ_LEN
 
-# --- 실시간 스트리밍 관련 엔드포인트 ---
+# 예측 상태 저장 구조
+user_keypoints = defaultdict(deque)  # deque of (feature, velocity, acceleration)
+user_prediction_history = defaultdict(list)
+user_latest_prediction = defaultdict(tuple)  # (word, confidence)
+user_full_sentence = defaultdict(list)  # user_id → List[str]
 
-def decode_base64_to_numpy(base64_string: str) -> np.ndarray | None:
-    """Base64 문자열을 OpenCV 이미지(Numpy 배열)로 디코딩합니다."""
-    try:
-        img_bytes = base64.b64decode(base64_string)
-        np_arr = np.frombuffer(img_bytes, np.uint8)
-        return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    except Exception as e:
-        print(f"[ERROR] Base64 decoding failed: {e}")
-        return None
+def get_full_sentence(user_id: str) -> str:
+    return " ".join(user_full_sentence.get(user_id, []))
 
+# 프레임 전송받아서 실시간으로 수어 -> 한글 단어 번역
 @router.post("/translate/analyze_frames")
-async def analyze_frames(
-    request: Request,
-    response: Response,
-    frames: List[str] = Body(..., embed=True),
-    db: Session = Depends(get_db)
-):
-    """클라이언트로부터 받은 Base64 인코딩된 프레임들을 실시간으로 분석합니다."""
+async def analyze_frames(request: Request, response: Response, frames: List[str] = Body(..., embed=True), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
-    
     print(f"\n[ROUTER|/analyze_frames] User '{user_id}' sent a batch of {len(frames)} frames.")
-
-    if user_id not in user_recognizers:
-        print(f"--- New real-time recognizer created for user: {user_id} ---")
-        user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
-    
-    recognizer = user_recognizers[user_id]
-    
     for base64_frame in frames:
         frame_np = decode_base64_to_numpy(base64_frame)
-        if frame_np is None:
+        feature = extract_features_from_frame(frame_np)
+        if feature is None:
             continue
-        
-        
+
         # --- 비디오 저장 로직 추가 ---
         if user_id not in user_video_writers:
             # 해당 유저의 첫 프레임이면 비디오 파일 생성
@@ -201,61 +195,70 @@ async def analyze_frames(
             height, width, _ = frame_np.shape
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             # 클라이언트가 약 15fps로 보내므로, 저장할 비디오의 fps를 15로 설정
-            writer = cv2.VideoWriter(filename, fourcc, 30, (width, height))
+            writer = cv2.VideoWriter(filename, fourcc, 5, (width, height))
             user_video_writers[user_id] = writer
             print(f"--- Start recording debug video for user '{user_id}' to '{filename}' ---")
         
         # 프레임을 비디오 파일에 쓰기
         user_video_writers[user_id].write(frame_np)
         # -----------------------------
-        
-        
-        frame_np = cv2.flip(frame_np, 1)
-        result = recognizer.process_frame(frame_np)
-        if result:
-            print(f"User '{user_id}' recognized new token: '{result}' -> Current sentence: '{recognizer.get_full_sentence()}'")
-            
+
+        buffer = user_keypoints[user_id]
+        if buffer:
+            velocity = feature - buffer[-1][0]
+            acceleration = velocity - buffer[-1][1]
+        else:
+            velocity = np.zeros_like(feature)
+            acceleration = np.zeros_like(feature)
+
+        buffer.append((feature, velocity, acceleration))
+        if len(buffer) > SEQ_LEN:
+            buffer.popleft()
+
+        if len(buffer) == SEQ_LEN:
+            sequence = np.array([
+                np.concatenate([f, v, a]) for f, v, a in buffer
+            ])
+            prediction, confidence = predict_with_model(sequence)
+
+            history = user_prediction_history[user_id]
+            history.append((prediction, confidence))
+            user_latest_prediction[user_id] = (prediction, confidence)
+
+            if confidence >= 70.0:
+                sentence = user_full_sentence[user_id]
+                if not sentence or sentence[-1] != prediction:
+                    sentence.append(prediction)
+
+            print(f"[{user_id}] 예측 결과: {prediction}, 확신도: {confidence:.2f}%")
+            print(f"[{user_id}] 저장됨, {sentence}")
+
     return {"status": "processing"}
 
-
+# 수어 -> 한글 단어 번역 결과를 다국어로 번역
 @router.get("/translate/translate_latest")
-async def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
-    """실시간으로 분석된 최종 문장을 가져오고 번역합니다."""
+def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
 
-    if user_id not in user_recognizers:
-        return {
-            "korean": "인식된 단어가 없습니다.",
-            "english": {"text": "", "원본언어": "KO"},
-            "japanese": {"text": "", "원본언어": "KO"},
-            "chinese": {"text": "", "원본언어": "KO"},
-        }
-    
-    # --- 비디오 저장 로직 추가 ---
-    # 번역 요청이 오면 비디오 녹화 종료
+    # --- 비디오 저장 종료 ---
     if user_id in user_video_writers:
         writer = user_video_writers[user_id]
         writer.release()
         print(f"--- Finished recording debug video for user '{user_id}' ---")
         del user_video_writers[user_id]
-    # -----------------------------
 
-    recognizer = user_recognizers[user_id]
-    # 박준수 수정 - 번역
-    semi_sentence = recognizer.get_full_sentence()
-    print(type(semi_sentence))
+    # --- 박준수 수정: 문장 생성 + 번역 ---
+    semi_sentence = get_full_sentence(user_id)
     print(f"디버깅용 semi_sentence: {semi_sentence}")
-    final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
-    print(f"디버깅용 semi_sentence: {final_sentence}")
-    # ---
-    
-    print(f"    [ROUTER|Result] Retrieved sentence: '{final_sentence}'. Resetting state for user.")
 
-    
-    # 중요한: 결과를 가져온 후에는 해당 유저의 Recognizer 상태를 초기화하여 다음 문장을 받을 준비를 합니다.
-    recognizer.reset()
-    del user_recognizers[user_id] # 캐시에서 삭제하여 메모리 관리
-    print(f"--- Recognizer for user {user_id} has been reset and removed from cache. ---")
+    final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+    print(f"디버깅용 final_sentence: {final_sentence}")
+    # -----------------------------------
+
+    # 캐시 초기화
+    user_prediction_history[user_id].clear()
+    user_full_sentence[user_id].clear()
+    user_latest_prediction.pop(user_id, None)
 
     if not final_sentence:
         return {
@@ -267,47 +270,254 @@ async def translate_latest(request: Request, response: Response, db: Session = D
 
     try:
         translator = deepl.Translator(AUTH_KEY)
-        result = {
+        return {
             "korean": final_sentence,
             "english": serialize_result(translator.translate_text(final_sentence, target_lang="EN-US")),
             "japanese": serialize_result(translator.translate_text(final_sentence, target_lang="JA")),
             "chinese": serialize_result(translator.translate_text(final_sentence, target_lang="ZH")),
         }
-        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
-    
+
 @router.get("/study/translate_latest")
 def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
 
-    if user_id not in user_recognizers:
-        return {
-            "korean": "인식된 단어가 없습니다.",
-        }
+    # 마지막 인식된 단어 가져오기
+    sentence = user_full_sentence.get(user_id, [])
+    word = sentence[-1] if sentence else None
 
-    recognizer = user_recognizers[user_id]
-    
-    # Recognizer 객체에서 최종 문장 가져오기
-    # final_sentence = recognizer.get_full_sentence()
-    # semi_sentence = recognizer.get_semi_sentence()
-    # final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
-
-    if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
-        word = recognizer.sentence_words[-1]
-    else:
-        word = None
-    
     if not word:
         return {
             "korean": "인식된 단어가 없습니다.",
         }
-    result = {
+
+    # 상태 초기화 (다음 단어 인식 위해)
+    user_prediction_history[user_id].clear()
+    user_full_sentence[user_id].clear()
+    user_latest_prediction.pop(user_id, None)
+
+    print(f"[study] 유저 '{user_id}' 인식 결과 단어: {word}")
+
+    return {
         "korean": word,
     }
-    
-    # 다음 문장 인식을 위해 해당 유저의 Recognizer 상태 초기화
-    recognizer.reset()
-    print(f"--- Recognizer for user {user_id} has been reset. ---")
 
-    return result
+
+# # --- 실시간 스트리밍 관련 엔드포인트 ---
+
+# def decode_base64_to_numpy(base64_string: str) -> np.ndarray | None:
+#     """Base64 문자열을 OpenCV 이미지(Numpy 배열)로 디코딩합니다."""
+#     try:
+#         img_bytes = base64.b64decode(base64_string)
+#         np_arr = np.frombuffer(img_bytes, np.uint8)
+#         return cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+#     except Exception as e:
+#         print(f"[ERROR] Base64 decoding failed: {e}")
+#         return None
+
+# @router.post("/translate/analyze_frames")
+# async def analyze_frames(
+#     request: Request,
+#     response: Response,
+#     frames: List[str] = Body(..., embed=True),
+#     db: Session = Depends(get_db)
+# ):
+#     """클라이언트로부터 받은 Base64 인코딩된 프레임들을 실시간으로 분석합니다."""
+#     user_id = verify_or_refresh_token(request, response)
+    
+#     print(f"\n[ROUTER|/analyze_frames] User '{user_id}' sent a batch of {len(frames)} frames.")
+
+#     if user_id not in user_recognizers:
+#         print(f"--- New real-time recognizer created for user: {user_id} ---")
+#         user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
+    
+#     recognizer = user_recognizers[user_id]
+    
+#     for base64_frame in frames:
+#         frame_np = decode_base64_to_numpy(base64_frame)
+#         if frame_np is None:
+#             continue
+        
+        
+#         # --- 비디오 저장 로직 추가 ---
+#         if user_id not in user_video_writers:
+#             # 해당 유저의 첫 프레임이면 비디오 파일 생성
+#             now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+#             filename = os.path.join(DEBUG_VIDEO_DIR, f"{user_id}_{now}.mp4")
+#             height, width, _ = frame_np.shape
+#             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#             # 클라이언트가 약 15fps로 보내므로, 저장할 비디오의 fps를 15로 설정
+#             writer = cv2.VideoWriter(filename, fourcc, 30, (width, height))
+#             user_video_writers[user_id] = writer
+#             print(f"--- Start recording debug video for user '{user_id}' to '{filename}' ---")
+        
+#         # 프레임을 비디오 파일에 쓰기
+#         user_video_writers[user_id].write(frame_np)
+#         # -----------------------------
+        
+        
+#         frame_np = cv2.flip(frame_np, 1)
+#         result = recognizer.process_frame(frame_np)
+#         if result:
+#             print(f"User '{user_id}' recognized new token: '{result}' -> Current sentence: '{recognizer.get_full_sentence()}'")
+            
+#     return {"status": "processing"}
+
+
+# @router.get("/translate/translate_latest")
+# async def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
+#     """실시간으로 분석된 최종 문장을 가져오고 번역합니다."""
+#     user_id = verify_or_refresh_token(request, response)
+
+#     if user_id not in user_recognizers:
+#         return {
+#             "korean": "인식된 단어가 없습니다.",
+#             "english": {"text": "", "원본언어": "KO"},
+#             "japanese": {"text": "", "원본언어": "KO"},
+#             "chinese": {"text": "", "원본언어": "KO"},
+#         }
+    
+#     # --- 비디오 저장 로직 추가 ---
+#     # 번역 요청이 오면 비디오 녹화 종료
+#     if user_id in user_video_writers:
+#         writer = user_video_writers[user_id]
+#         writer.release()
+#         print(f"--- Finished recording debug video for user '{user_id}' ---")
+#         del user_video_writers[user_id]
+#     # -----------------------------
+
+#     recognizer = user_recognizers[user_id]
+#     # 박준수 수정 - 번역
+#     semi_sentence = recognizer.get_full_sentence()
+#     print(type(semi_sentence))
+#     print(f"디버깅용 semi_sentence: {semi_sentence}")
+#     final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+#     print(f"디버깅용 semi_sentence: {final_sentence}")
+#     # ---
+    
+#     print(f"    [ROUTER|Result] Retrieved sentence: '{final_sentence}'. Resetting state for user.")
+
+    
+#     # 중요한: 결과를 가져온 후에는 해당 유저의 Recognizer 상태를 초기화하여 다음 문장을 받을 준비를 합니다.
+#     recognizer.reset()
+#     del user_recognizers[user_id] # 캐시에서 삭제하여 메모리 관리
+#     print(f"--- Recognizer for user {user_id} has been reset and removed from cache. ---")
+
+#     if not final_sentence:
+#         return {
+#             "korean": "인식된 단어가 없습니다.",
+#             "english": {"text": "", "원본언어": "KO"},
+#             "japanese": {"text": "", "원본언어": "KO"},
+#             "chinese": {"text": "", "원본언어": "KO"},
+#         }
+
+#     try:
+#         translator = deepl.Translator(AUTH_KEY)
+#         result = {
+#             "korean": final_sentence,
+#             "english": serialize_result(translator.translate_text(final_sentence, target_lang="EN-US")),
+#             "japanese": serialize_result(translator.translate_text(final_sentence, target_lang="JA")),
+#             "chinese": serialize_result(translator.translate_text(final_sentence, target_lang="ZH")),
+#         }
+#         return result
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
+    
+# @router.get("/study/translate_latest")
+# def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
+#     user_id = verify_or_refresh_token(request, response)
+
+#     if user_id not in user_recognizers:
+#         return {
+#             "korean": "인식된 단어가 없습니다.",
+#         }
+
+#     recognizer = user_recognizers[user_id]
+    
+#     # Recognizer 객체에서 최종 문장 가져오기
+#     # final_sentence = recognizer.get_full_sentence()
+#     # semi_sentence = recognizer.get_semi_sentence()
+#     # final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
+
+#     if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
+#         word = recognizer.sentence_words[-1]
+#     else:
+#         word = None
+    
+#     if not word:
+#         return {
+#             "korean": "인식된 단어가 없습니다.",
+#         }
+#     result = {
+#         "korean": word,
+#     }
+    
+#     # 다음 문장 인식을 위해 해당 유저의 Recognizer 상태 초기화
+#     recognizer.reset()
+#     print(f"--- Recognizer for user {user_id} has been reset. ---")
+
+#     return result
+
+
+# # 웹소켓 테스트
+# @router.websocket("/ws/translate/frames")
+# async def websocket_frame_receiver(websocket: WebSocket):
+#     await websocket.accept()
+#     print("소켓 연결 완료")
+#     # JWT 기반 사용자 인증은 WebSocket에선 명시적으로 받는 방식 사용
+#     # ex: {"user_id": "aaa", "frame": "<base64>"}
+#     user_id = None
+
+#     try:
+#         while True:
+#             message = await websocket.receive_text()
+
+#             try:
+#                 data = json.loads(message)
+#                 user_id = data.get("user_id")
+#                 base64_frame = data.get("frame")
+#             except Exception as e:
+#                 print("[WS] Invalid JSON format:", e)
+#                 continue
+
+#             if not user_id or not base64_frame:
+#                 continue
+
+#             frame_np = decode_base64_to_numpy(base64_frame)
+#             if frame_np is None:
+#                 continue
+
+#             # Recognizer 생성
+#             if user_id not in user_recognizers:
+#                 print(f"--- New real-time recognizer created for user: {user_id} ---")
+#                 user_recognizers[user_id] = SignLanguageRecognizer(CONFIG)
+
+#             recognizer = user_recognizers[user_id]
+
+#             # 디버그 비디오 저장 시작
+#             if user_id not in user_video_writers:
+#                 now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+#                 filename = os.path.join(DEBUG_VIDEO_DIR, f"{user_id}_{now}.mp4")
+#                 height, width, _ = frame_np.shape
+#                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#                 writer = cv2.VideoWriter(filename, fourcc, 30, (width, height))
+#                 user_video_writers[user_id] = writer
+#                 print(f"--- Start recording debug video for user '{user_id}' to '{filename}' ---")
+
+#             user_video_writers[user_id].write(frame_np)
+
+#             # 인식 처리
+#             frame_np = cv2.flip(frame_np, 1)
+#             result = recognizer.process_frame(frame_np)
+#             if result:
+#                 print(f"User '{user_id}' recognized: '{result}' → '{recognizer.get_full_sentence()}'")
+
+#     except Exception as e:
+#         print(f"[WS] Connection closed or error: {e}")
+
+#     finally:
+#         if user_id in user_video_writers:
+#             user_video_writers[user_id].release()
+#             del user_video_writers[user_id]
+#             print(f"--- Recording finished for user '{user_id}' ---")

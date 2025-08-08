@@ -8,8 +8,8 @@ from API.checkUID_router import router as checkUID_router
 from API.login_router import router as login_router
 from API.logout_router import router as logout_router
 from API.study_course_router import router as study_course_router
-# from API.translate_router import router as translate_router
-from API.translate_router_F import router as translate_router
+from API.translate_router import router as translate_router
+from API.translate_router_F import router as translate_router_F
 from API.user_router import router as user_router
 from API.bookmark_router import router as bookmark_router
 from API.calendar_router import router as calendar_router
@@ -52,7 +52,7 @@ app.include_router(logout_router)
 app.include_router(dictionary_router)
 
 # 번역
-app.include_router(translate_router)
+app.include_router(translate_router_F)
 # app.include_router(translate_router)
 
 # 학습 코스 선택
