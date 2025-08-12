@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from core_method import verify_or_refresh_token, get_db
-from DB_Table import StudyRecord, Study, StudyStep
-from datetime import date, timedelta
+from DB_Table import StudyRecord, Study, StudyStep, StudyStepMeta
+from datetime import date, datetime, time, timedelta
 
 router = APIRouter()
 
@@ -99,3 +99,52 @@ async def get_study_stats(db: Session = Depends(get_db), user_id: str = Depends(
         "learned_words_count": learned_words_count,
         "completed_steps": completed_steps_by_sid
     }
+
+# 특정 날짜 학습 기록 조회
+@router.get("/study/records/day")
+async def get_day_records(date_str: str = Query(..., description="YYYY-MM-DD 형식"), db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token),):
+    try:
+        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return {"date": date_str, "items": []}
+
+    start_dt = datetime.combine(selected_date, time.min)
+    end_dt = start_dt + timedelta(days=1)
+
+    rows = (
+        db.query(
+            StudyRecord.SID,
+            Study.Study_Course,
+            StudyRecord.Step,
+            StudyStepMeta.StepName,
+            StudyRecord.Study_Date,
+            StudyRecord.Complate,
+        )
+        .join(Study, Study.SID == StudyRecord.SID)
+        .outerjoin(
+            StudyStepMeta,
+            (StudyStepMeta.SID == StudyRecord.SID)
+            & (StudyStepMeta.Step == StudyRecord.Step),
+        )
+        .filter(
+            StudyRecord.UserID == user_id,
+            StudyRecord.Study_Date >= start_dt,
+            StudyRecord.Study_Date < end_dt,
+        )
+        .order_by(StudyRecord.Study_Date.asc())
+        .all()
+    )
+
+    items = [
+        {
+            "sid": r.SID,
+            "study_course": r.Study_Course,
+            "step": r.Step,
+            "step_name": r.StepName,
+            "study_time": r.Study_Date.isoformat(),
+            "complete": bool(r.Complate),
+        }
+        for r in rows
+    ]
+
+    return {"date": date_str, "items": items}

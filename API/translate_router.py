@@ -21,7 +21,7 @@ mp_hands = mp.solutions.hands
 
 router = APIRouter()
 
-load_dotenv(dotenv_path="deepl_api_key.env")
+load_dotenv(dotenv_path="keys.env")
 AUTH_KEY = os.getenv("DEEPL_API_KEY")
 VIDEO_DIR = "video"
 

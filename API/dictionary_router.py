@@ -12,7 +12,7 @@ from DB_Table import Word, WordDetail
 
 router = APIRouter()
 
-load_dotenv(dotenv_path="dict_api_key.env")
+load_dotenv(dotenv_path="keys.env")
 OPEN_DICT_KEY = os.getenv("OPEN_DICT_KEY")
 CERTKEY_NO = os.getenv("CERTKEY_NO")
 

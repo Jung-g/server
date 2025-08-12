@@ -7,6 +7,7 @@ __pycache__/
 dict_api_key.env
 secret_key.env
 deepl_api_key.env
+keys.env
 
 # 가상환경 디렉터리 (있다면)
 venv/
@@ -25,3 +26,4 @@ optimizer.pt
 *.safetensors
 
 debug_videos/
+__pycache__
