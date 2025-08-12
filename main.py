@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+import os
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from DB import init_db
+from deps import user_required
 from API.dictionary_router import router as dictionary_router
 from API.checkUID_router import router as checkUID_router
 from API.login_router import router as login_router
@@ -25,8 +27,22 @@ async def lifespan(app: FastAPI):
 
     print("앱 종료됨")
 
-app = FastAPI(lifespan=lifespan)
-app.mount("/video", StaticFiles(directory="video"), name="video")
+openapi_tags = [
+    {"name": "Login/Logout", "description": "로그인/로그아웃"},
+    {"name": "User", "description": "회원 가입/회원 정보 수정/회원탈퇴"},
+    {"name": "Dictionary", "description": "단어 조회"},
+    {"name": "Translate", "description": "수어 <--> 한국어 변환"},
+    {"name": "Study", "description": "학습 코스/이력"},
+    {"name": "Bookmark", "description": "북마크 관리"},
+    {"name": "Calendar", "description": "학습 달력"},
+    {"name": "Animation", "description": "애니메이션"},
+]
+
+app = FastAPI(
+    lifespan=lifespan,
+    swagger_ui_parameters={"persistAuthorization": True},
+    openapi_tags=openapi_tags
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,20 +65,20 @@ app.include_router(login_router)
 app.include_router(logout_router)
 
 # 사전
-app.include_router(dictionary_router)
+app.include_router(dictionary_router, dependencies=[Depends(user_required)])
 
 # 번역
-app.include_router(translate_router_F)
-# app.include_router(translate_router)
+app.include_router(translate_router_F, dependencies=[Depends(user_required)])
+# app.include_router(translate_router, dependencies=[Depends(user_required)])
 
 # 학습 코스 선택
-app.include_router(study_course_router)
+app.include_router(study_course_router, dependencies=[Depends(user_required)])
 
 # 단어 북마크 추가 / 삭제 / 조회
-app.include_router(bookmark_router)
+app.include_router(bookmark_router, dependencies=[Depends(user_required)])
 
 # 학습 달력
-app.include_router(calendar_router)
+app.include_router(calendar_router, dependencies=[Depends(user_required)])
 
 # 애니메이션
-app.include_router(animation_router)
+app.include_router(animation_router, dependencies=[Depends(user_required)])

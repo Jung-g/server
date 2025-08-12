@@ -3,19 +3,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
+from API.calendar_router import calculate_streak
 from DB_Table import Study, StudyRecord, StudyStep, StudyStepMeta, Word
 from core_method import get_db, verify_or_refresh_token
 
-router = APIRouter()
+router = APIRouter(tags=["Study"])
 
 # 학습 코스
-@router.get("/study/list")
+@router.get("/study/list", summary="학습 코스명을 가져옵니다.", description="학습 코스명을 가져옵니다.")
 async def get_study_list(request: Request, response: Response, db: Session = Depends(get_db), _: str = Depends(verify_or_refresh_token)):
     studies = db.query(Study).all()
     return [{"SID": s.SID, "Study_Course": s.Study_Course} for s in studies]
 
 # 학습 코스의 세부사항
-@router.get("/study/course")
+@router.get("/study/course", summary="선택된 학습 코스의 세부정보를 가져옵니다.", description="선택된 학습 코스의 세부정보를 가져옵니다.")
 async def get_course_detail(request: Request, response: Response, course_name: str = Query(..., description="학습 코스 이름"), db: Session = Depends(get_db), _: str = Depends(verify_or_refresh_token)):
     study = db.query(Study).filter(Study.Study_Course == course_name).first()
     if not study:
@@ -65,8 +66,51 @@ async def get_course_detail(request: Request, response: Response, course_name: s
         "steps": steps_list
     }
 
+# 학습 정보 불러오기
+@router.get("/study/stats", summary="학습 정보를 가져옵니다.", description="학습 정보를 가져옵니다.")
+async def get_study_stats(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
+    records = (
+        db.query(StudyRecord)
+        .filter(
+            StudyRecord.UserID == user_id,
+            StudyRecord.Complate == True
+        )
+        .all()
+    )
+
+    date_list = [record.Study_Date.date() for record in records]
+    learned_dates = [d.isoformat() for d in date_list]
+    streak_days = calculate_streak(date_list)
+
+    sid_step_pairs = {(r.SID, r.Step) for r in records}
+
+    word_ids = set()
+    for sid, step in sid_step_pairs:
+        step_words = (
+            db.query(StudyStep.WID)
+            .filter(StudyStep.SID == sid, StudyStep.Step == step)
+            .all()
+        )
+        word_ids.update(wid for (wid,) in step_words)
+
+    learned_words_count = len(word_ids)
+
+    completed_steps_by_sid = {}
+    for sid, step in sid_step_pairs:
+        completed_steps_by_sid.setdefault(sid, []).append(step)
+
+    for sid in completed_steps_by_sid:
+        completed_steps_by_sid[sid] = sorted(completed_steps_by_sid[sid])
+
+    return {
+        "learned_dates": learned_dates,
+        "streak_days": streak_days,
+        "learned_words_count": learned_words_count,
+        "completed_steps": completed_steps_by_sid
+    }
+
 # 학습 진행도(%)
-@router.get("/study/completion_rate")
+@router.get("/study/completion_rate", summary="전체 학습 코스에 대해서 학습 진행도를 가져옵니다.", description="전체 학습 코스에 대해서 학습 진행도를 가져옵니다.")
 async def get_completion_rate(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     from sqlalchemy import func
 
@@ -102,7 +146,7 @@ async def get_completion_rate(db: Session = Depends(get_db), user_id: str = Depe
 class StudyCompleteRequest(BaseModel):
     sid: int
     step: int
-@router.post("/study/complete")
+@router.post("/study/complete", summary="학습 완료 요청을 처리합니다.", description="학습 완료 요청을 처리합니다.")
 async def complete_study(request: Request, response: Response, req: StudyCompleteRequest, db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
 
@@ -131,7 +175,7 @@ async def complete_study(request: Request, response: Response, req: StudyComplet
     return {"success": True}
 
 # 학습 완료한 step5만 가져오기
-@router.get("/study/review_words")
+@router.get("/study/review_words", summary="완료한 학습의 퀴즈 단계를 가져옵니다.", description="완료한 학습의 퀴즈 단계를 가져옵니다.")
 def get_review_step5_words(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
 

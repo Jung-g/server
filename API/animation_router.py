@@ -5,9 +5,9 @@ from requests import Session
 from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
 
-router = APIRouter()
+router = APIRouter(tags=["Animation"])
 
-@router.get("/animation")
+@router.get("/animation", summary="요청이 들어온 단어의 애니메이션을 생성합니다.", description="요청이 들어온 단어의 애니메이션을 생성합니다.")
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
     

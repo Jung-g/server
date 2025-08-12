@@ -23,7 +23,7 @@ from js_korean_2_gloss.main_translate import main_translate
 from model.LSTM.LSTM_sign import CONFIG, SignLanguageRecognizer
 
 # --- 기본 설정 ---
-router = APIRouter()
+router = APIRouter(tags=["Translate"])
 load_dotenv(dotenv_path="keys.env")
 AUTH_KEY = os.getenv("DEEPL_API_KEY")
 user_recognizers = TTLCache(maxsize=100, ttl=300)
@@ -51,7 +51,7 @@ def serialize_result(r):
         }
 
 
-@router.post("/translate/sign_to_text")
+@router.post("/translate/sign_to_text", summary="사용자의 수어 동작을 텍스트로 번역합니다.", description="사용자의 수어 동작을 텍스트로 번역합니다.")
 async def sign_to_text_handler(
     request: Request,
     response: Response,
@@ -125,7 +125,7 @@ async def sign_to_text_handler(
         return {"success": True,}
 
 
-@router.get("/translate/text_to_sign")
+@router.get("/translate/text_to_sign", summary="사용자의 텍스트를 수어 애니메이션으로 변환합니다.", description="사용자의 텍스트를 수어 애니메이션으로 변환합니다.")
 async def get_sign_animation(request: Request, response: Response, word_text: str = Query(..., description="입력된 한국어 단어"), db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
     
@@ -177,7 +177,7 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
 #     return " ".join(user_full_sentence.get(user_id, []))
 
 # # 프레임 전송받아서 실시간으로 수어 -> 한글 단어 번역
-# @router.post("/translate/analyze_frames")
+# @router.post("/translate/analyze_frames", description="사용자의 수어 동작을 프레임 단위로 받아 텍스트로 번역하는 라우터")
 # async def analyze_frames(request: Request, response: Response, frames: List[str] = Body(..., embed=True), db: Session = Depends(get_db)):
 #     user_id = verify_or_refresh_token(request, response)
 #     print(f"\n[ROUTER|/analyze_frames] User '{user_id}' sent a batch of {len(frames)} frames.")
@@ -237,7 +237,7 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
 #     return {"status": "수신완료",}
 
 # # 수어 -> 한글 단어 번역 결과를 다국어로 번역
-# @router.get("/translate/translate_latest")
+# @router.get("/translate/translate_latest", description="프레임 단위로 받은 수어 영상에 대한 최종 번역 결과를 생성하는 라우터")
 # def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
 #     user_id = verify_or_refresh_token(request, response)
 
@@ -280,7 +280,7 @@ async def get_sign_animation(request: Request, response: Response, word_text: st
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
 
-# @router.get("/study/translate_latest")
+# @router.get("/study/translate_latest", description="웹 클라이언트의 학습 단계에 사용하는 라우터")
 # def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
 #     user_id = verify_or_refresh_token(request, response)
 
@@ -317,7 +317,7 @@ def decode_base64_to_numpy(base64_string: str) -> np.ndarray | None:
         print(f"[ERROR] Base64 decoding failed: {e}")
         return None
 
-@router.post("/translate/analyze_frames")
+@router.post("/translate/analyze_frames", summary="사용자의 수어 동작을 프레임 단위로 받아 텍스트로 번역합니다.", description="사용자의 수어 동작을 프레임 단위로 받아 텍스트로 번역합니다.")
 async def analyze_frames(
     request: Request,
     response: Response,
@@ -385,7 +385,7 @@ async def analyze_frames(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
 
-@router.get("/translate/translate_latest")
+@router.get("/translate/translate_latest", summary="프레임 단위로 받은 수어 영상에 대한 최종 번역 결과를 생성합니다.", description="프레임 단위로 받은 수어 영상에 대한 최종 번역 결과를 생성합니다.")
 async def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
     """실시간으로 분석된 최종 문장을 가져오고 번역합니다."""
     user_id = verify_or_refresh_token(request, response)
@@ -444,7 +444,7 @@ async def translate_latest(request: Request, response: Response, db: Session = D
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"번역 API 호출 중 오류 발생: {str(e)}")
     
-@router.get("/study/translate_latest")
+@router.get("/study/translate_latest", summary="웹 클라이언트의 학습 단계에서 사용하며, 동작의 정확도를 가져옵니다.", description="웹 클라이언트의 학습 단계에서 사용하며, 동작의 정확도를 가져옵니다.")
 def translate_latest(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = verify_or_refresh_token(request, response)
 
@@ -454,11 +454,6 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
         }
 
     recognizer = user_recognizers[user_id]
-    
-    # Recognizer 객체에서 최종 문장 가져오기
-    # final_sentence = recognizer.get_full_sentence()
-    # semi_sentence = recognizer.get_semi_sentence()
-    # final_sentence = translate_pipeline(semi_sentence) if semi_sentence else None
 
     if hasattr(recognizer, "sentence_words") and recognizer.sentence_words:
         word = recognizer.sentence_words[-1]

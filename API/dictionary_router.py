@@ -10,14 +10,14 @@ from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
 from DB_Table import Word, WordDetail
 
-router = APIRouter()
+router = APIRouter(tags=["Dictionary"])
 
 load_dotenv(dotenv_path="keys.env")
 OPEN_DICT_KEY = os.getenv("OPEN_DICT_KEY")
 CERTKEY_NO = os.getenv("CERTKEY_NO")
 
 # db에 저장된 단어
-@router.get("/dictionary/words")
+@router.get("/dictionary/words", summary="DB에 저장된 단어를 전부 가져옵니다.", description="DB에 저장된 단어를 전부 가져옵니다.")
 async def get_words(request: Request, response: Response, query: str = Query(None), db: Session = Depends(get_db),):
     user_id = verify_or_refresh_token(request, response)
 
@@ -28,7 +28,6 @@ async def get_words(request: Request, response: Response, query: str = Query(Non
 
     result = []
     for w in words:
-        # animation_path = w.animations[0].AnimePath if w.animations else ""
         result.append({
             "wid": w.WID,
             "word": w.Word,
@@ -37,7 +36,7 @@ async def get_words(request: Request, response: Response, query: str = Query(Non
     return result
 
 # 단어 상세정보
-@router.get("/dictionary/words/detail")
+@router.get("/dictionary/words/detail", summary="선택된 단어의 상세정보를 가져옵니다.", description="선택된 단어의 상세정보를 가져옵니다.")
 async def get_words_detail(wid: int = Query(..., description="Word의 WID"), db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     try:
         word_obj = db.query(Word).get(wid)

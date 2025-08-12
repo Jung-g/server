@@ -4,7 +4,7 @@ from core_method import verify_or_refresh_token, get_db
 from DB_Table import StudyRecord, Study, StudyStep, StudyStepMeta
 from datetime import date, datetime, time, timedelta
 
-router = APIRouter()
+router = APIRouter(tags=["Calendar"])
 
 def calculate_streak(dates: list[date]) -> int:
     today = date.today()
@@ -38,7 +38,7 @@ def calculate_best_streak(dates: list[date]) -> int:
     return max_streak
 
 # 달력
-@router.get("/study/calendar")
+@router.get("/study/calendar", summary="학습 기록에 대한 정보를 가져옵니다.", description="학습 기록에 대한 정보를 가져옵니다.")
 async def get_study_records(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     records = (
         db.query(StudyRecord)
@@ -57,51 +57,8 @@ async def get_study_records(db: Session = Depends(get_db), user_id: str = Depend
         "best_streak": best_streak
     }
 
-# 달력 (홈 화면용)
-@router.get("/study/stats")
-async def get_study_stats(db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
-    records = (
-        db.query(StudyRecord)
-        .filter(
-            StudyRecord.UserID == user_id,
-            StudyRecord.Complate == True
-        )
-        .all()
-    )
-
-    date_list = [record.Study_Date.date() for record in records]
-    learned_dates = [d.isoformat() for d in date_list]
-    streak_days = calculate_streak(date_list)
-
-    sid_step_pairs = {(r.SID, r.Step) for r in records}
-
-    word_ids = set()
-    for sid, step in sid_step_pairs:
-        step_words = (
-            db.query(StudyStep.WID)
-            .filter(StudyStep.SID == sid, StudyStep.Step == step)
-            .all()
-        )
-        word_ids.update(wid for (wid,) in step_words)
-
-    learned_words_count = len(word_ids)
-
-    completed_steps_by_sid = {}
-    for sid, step in sid_step_pairs:
-        completed_steps_by_sid.setdefault(sid, []).append(step)
-
-    for sid in completed_steps_by_sid:
-        completed_steps_by_sid[sid] = sorted(completed_steps_by_sid[sid])
-
-    return {
-        "learned_dates": learned_dates,
-        "streak_days": streak_days,
-        "learned_words_count": learned_words_count,
-        "completed_steps": completed_steps_by_sid
-    }
-
 # 특정 날짜 학습 기록 조회
-@router.get("/study/records/day")
+@router.get("/study/records/day", summary="선택한 날짜에 대한 학습 기록의 상세정보를 가져옵니다.", description="선택한 날짜에 대한 학습 기록의 상세정보를 가져옵니다.")
 async def get_day_records(date_str: str = Query(..., description="YYYY-MM-DD 형식"), db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token),):
     try:
         selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()

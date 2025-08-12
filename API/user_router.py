@@ -4,14 +4,14 @@ from sqlalchemy.orm import Session
 from core_method import verify_or_refresh_token, get_db, pwd_context   
 from DB_Table import BookMark, StudyRecord, Token, User
 
-router = APIRouter()
+router = APIRouter(tags=["User"])
 
 # 회원가입
 class RegisterRequest(BaseModel):
     id: str
     pw: str
     name: str
-@router.post("/user/register")
+@router.post("/user/register", summary="회원가입 요청을 처리합니다.", description="회원가입 요청을 처리합니다.")
 async def register_user(req: RegisterRequest, db: Session = Depends(get_db)):
     id = req.id
     pw = req.pw
@@ -30,7 +30,7 @@ async def register_user(req: RegisterRequest, db: Session = Depends(get_db)):
 class UserUpdate(BaseModel):
     name: str | None = None
     new_password: str | None = None
-@router.put("/user/update")
+@router.put("/user/update", summary="회원정보 수정 요청을 처리합니다.", description="회원정보 수정 요청을 처리합니다.")
 async def update_user(update_data: UserUpdate, db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     user = db.query(User).filter(User.UserID == user_id).first()
     if not user:
@@ -57,7 +57,7 @@ async def update_user(update_data: UserUpdate, db: Session = Depends(get_db), us
 class PasswordResetRequest(BaseModel):
     user_id: str
     new_password: str
-@router.put("/user/reset_password")
+@router.put("/user/reset_password", summary="비밀번호 재설정 요청을 처리합니다.", description="비밀번호 재설정 요청을 처리합니다.")
 async def reset_password(data: PasswordResetRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.UserID == data.user_id).first()
     if not user:
@@ -70,7 +70,7 @@ async def reset_password(data: PasswordResetRequest, db: Session = Depends(get_d
 # 회원탈퇴
 class DeleteUserRequest(BaseModel):
     password: str
-@router.post("/delete_user")
+@router.post("/delete_user", summary="회원탈퇴 요청을 처리합니다.", description="회원탈퇴 요청을 처리합니다.")
 def delete_user(data: DeleteUserRequest, db: Session = Depends(get_db), user_id: str = Depends(verify_or_refresh_token)):
     try:
         user = db.query(User).filter(User.UserID == user_id).first()

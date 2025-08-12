@@ -5,13 +5,13 @@ from sqlalchemy.orm import Session
 from core_method import create_access_token, create_refresh_token, get_db, pwd_context
 from DB_Table import Token, User
 
-router = APIRouter()
+router = APIRouter(tags=["Login/Logout"])
 
 # 로그인
 class LoginRequest(BaseModel):
     id: str
     pw: str
-@router.post("/user/login")
+@router.post("/user/login", summary="로그인 요청을 처리합니다.", description="로그인 요청을 처리합니다.")
 async def login_user(req: LoginRequest, db: Session = Depends(get_db)):
     id = req.id
     pw = req.pw
@@ -58,7 +58,7 @@ async def login_user(req: LoginRequest, db: Session = Depends(get_db)):
 # 자동 로그인
 class AutoLoginRequest(BaseModel):
     refresh_token: str
-@router.post("/user/auto_login")
+@router.post("/user/auto_login", summary="자동 로그인 요청을 처리합니다.", description="자동 로그인 요청을 처리합니다.")
 async def auto_login(req: AutoLoginRequest, db: Session = Depends(get_db)):
     refresh_token = req.refresh_token
 
