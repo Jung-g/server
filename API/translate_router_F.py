@@ -420,9 +420,13 @@ async def translate_latest(request: Request, response: Response, db: Session = D
 
     
     # 중요한: 결과를 가져온 후에는 해당 유저의 Recognizer 상태를 초기화하여 다음 문장을 받을 준비를 합니다.
-    recognizer.reset()
-    del user_recognizers[user_id] # 캐시에서 삭제하여 메모리 관리
-    print(f"--- Recognizer for user {user_id} has been reset and removed from cache. ---")
+    try:
+        recognizer.reset()
+    except Exception as e:
+        print(f"Recognizer reset error: {e}")
+    finally:
+        user_recognizers.pop(user_id, None)
+        print(f"--- Recognizer for user {user_id} has been reset and removed from cache. ---")
 
     if not final_sentence:
         return {

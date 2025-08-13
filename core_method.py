@@ -18,28 +18,12 @@ def get_db():
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 #JWT 초기 설정
-load_dotenv(dotenv_path="keys.env")
-SECRET_KEY = os.getenv("SECRET_KEY")
+load_dotenv(dotenv_path="keys.env") # 비밀 키 저장된 env 파일 불러오기
+SECRET_KEY = os.getenv("SECRET_KEY") # 비밀 키 불러오기
 ALGORITHM = "HS256" # 암호화 알고리즘
-ACCESS_TOKEN_EXPIRE_MINUTES = 15 # 토큰 만료시간 (단위 : 분)
+ACCESS_TOKEN_EXPIRE_MINUTES = 15 # 토큰 만료시간 설정 (단위 : 분)
 
-# JWT 인증
-def get_current_user_id(request: Request):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="인증 정보가 없습니다.")
-
-    token = auth_header.split(" ")[1]
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="토큰에 사용자 정보가 없습니다.")
-        return user_id
-    except JWTError:
-        raise HTTPException(status_code=401, detail="토큰이 유효하지 않습니다.")
-
-# 액세스 토큰 유효 여부 (미유효시 재발급)
+# JWT 액세스 토큰 인증 (유효하지 않은 경우 Refresh token으로 재발급)
 def verify_or_refresh_token(request: Request, response: Response) -> str:
     auth_header = request.headers.get("Authorization")
     refresh_token = request.headers.get("X-Refresh-Token")
