@@ -1,5 +1,3 @@
-# best_similar.py
-
 from collections import defaultdict
 
 def find_best_candidate_iterative(search_results_for_word):
@@ -34,7 +32,6 @@ def find_best_candidate_iterative(search_results_for_word):
         sorted_candidates = sorted(words_by_freq[freq], key=lambda x: x[1], reverse=True)
 
         print(f"\n[ 빈도수 {freq} 검사 ]")
-        # 해당 빈도의 모든 후보와 각각의 평균 점수를 출력합니다.
         freq_candidates_str = ", ".join([f"'{w}'(평균:{s:.4f})" for w, s in sorted_candidates])
         print(f"  - 후보: {freq_candidates_str}")
 

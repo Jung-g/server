@@ -1,7 +1,5 @@
 import ollama
-# 박준수 추가
-from js_korean_2_gloss.resource_loader import resources  # [수정] 중앙 리소스 관리자를 import합니다.
-# ---
+from js_korean_2_gloss.resource_loader import resources  
 
 def ollama_translate_control(original_sentence: str) -> str:
     """
