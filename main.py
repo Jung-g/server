@@ -1,8 +1,6 @@
 from contextlib import asynccontextmanager
-import os
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from DB import init_db
 from deps import user_required
 from API.dictionary_router import router as dictionary_router

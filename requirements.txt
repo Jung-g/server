@@ -3,7 +3,8 @@ uvicorn
 sqlalchemy
 python-dotenv
 python-jose
-passlib[bcrypt]
+passlib
+bcrypt
 pyodbc
 mediapipe
 opencv-python
@@ -11,7 +12,6 @@ numpy
 python-dateutil
 python-multipart
 deepl
-opencv-python
 torch
 pyctcdecode
 pandas

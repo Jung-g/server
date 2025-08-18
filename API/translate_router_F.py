@@ -1,4 +1,3 @@
-import json
 import os
 import tempfile
 import traceback
@@ -10,7 +9,7 @@ import numpy as np
 from cachetools import TTLCache
 from dotenv import load_dotenv
 from fastapi import (APIRouter, Body, Depends, File, Form, HTTPException, Query,
-                     Request, Response, UploadFile, WebSocket)
+                     Request, Response, UploadFile)
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import base64
@@ -456,6 +455,15 @@ def translate_latest(request: Request, response: Response, db: Session = Depends
         return {
             "korean": "인식된 단어가 없습니다.",
         }
+
+    # --- 비디오 저장 로직 추가 ---
+    # 번역 요청이 오면 비디오 녹화 종료
+    if user_id in user_video_writers:
+        writer = user_video_writers[user_id]
+        writer.release()
+        print(f"--- Finished recording debug video for user '{user_id}' ---")
+        del user_video_writers[user_id]
+    # -----------------------------
 
     recognizer = user_recognizers[user_id]
 
