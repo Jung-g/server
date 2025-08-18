@@ -11,7 +11,6 @@ class ResourceManager:
         print("="*50)
         print("중앙 리소스 관리자 초기화를 시작합니다...")
 
-        # --- [수정] 경로 재구성: 원본 CSV 경로 추가 및 생성할 파일명 변경 ---
         current_dir = os.path.dirname(os.path.abspath(__file__))
         dataset_dir = os.path.join(current_dir, "dataset")
 
@@ -28,11 +27,9 @@ class ResourceManager:
             "cache_ko_sroberta_multitask": os.path.join(dataset_dir, "our_lemma_cache_ko_sroberta_multitask.pt"),
         }
         
-        # 박준수 추가
         self.OLLAMA_MODEL_NAME = 'exaone3.5:7.8b'
-        # ---
 
-        # --- 모델 로딩 로직 (변경 없음) ---
+        # --- 모델 로딩 로직 ---
         print("\n[1/5] KoBART & KoT5 모델 로딩...")
         self.kobart_tokenizer = PreTrainedTokenizerFast.from_pretrained(self.PATHS["kobart_model"])
         self.kobart_model = BartForConditionalGeneration.from_pretrained(self.PATHS["kobart_model"])
@@ -44,12 +41,12 @@ class ResourceManager:
         print("\n[2/5] SBERT 계열 모델 5종 로딩...")
         self.SBERT_MODELS = { "sbert": SentenceTransformer("snunlp/KR-SBERT-V40K-klueNLI-augSTS"), "kosim_roberta": SentenceTransformer("BM-K/KoSimCSE-roberta"), "kosim_multitask": SentenceTransformer("BM-K/KoSimCSE-RoBERTa-multitask"), "bge_m3_korean": SentenceTransformer("upskyy/bge-m3-korean"), "ko_sroberta_multitask": SentenceTransformer("jhgan/ko-sroberta-multitask") }
         
-        # --- [수정] 단어 사전 로딩 로직 변경 ---
+        # --- 단어 사전 로딩 로직 변경 ---
         print("\n[3/5] 단어 사전 로딩...")
-        self.lemmas_set = self._initialize_lemma_data() # 새 함수 호출
+        self.lemmas_set = self._initialize_lemma_data() 
         self.lemma_list = sorted(list(self.lemmas_set))
 
-        # --- 사전 임베딩 및 캐시 관리 (변경 없음) ---
+        # --- 사전 임베딩 및 캐시 관리 ---
         print("\n[4/5] 사전 임베딩 및 캐시 관리...")
         self.SBERT_EMBEDDINGS = { "sbert": self._get_or_create_embeddings("sbert", self.PATHS["cache_sbert"]), "kosim_roberta": self._get_or_create_embeddings("kosim_roberta", self.PATHS["cache_kosim_roberta"]), "kosim_multitask": self._get_or_create_embeddings("kosim_multitask", self.PATHS["cache_kosim_multitask"]), "bge_m3_korean": self._get_or_create_embeddings("bge_m3_korean", self.PATHS["cache_bge_m3_korean"]), "ko_sroberta_multitask": self._get_or_create_embeddings("ko_sroberta_multitask", self.PATHS["cache_ko_sroberta_multitask"]), }
         
@@ -125,7 +122,6 @@ class ResourceManager:
         torch.save((self.lemma_list, lemma_embeddings), cache_path)
         return lemma_embeddings
 
-    #박준수 추가 ollama 모델 다운로드
     def initialize_ollama_model(self):
         """
         Ollama 모델이 로컬에 존재하는지 확인하고, 없으면 자동으로 다운로드합니다.
@@ -141,17 +137,14 @@ class ResourceManager:
                 print(f"'{base_model_name}' 계열의 모델이 이미 설치되어 있습니다. 다운로드를 건너뜁니다.")
                 return
 
-            # 3. 모델이 없으면 다운로드를 시작합니다.
             print(f"모델 '{self.OLLAMA_MODEL_NAME}'을(를) 찾을 수 없습니다. 다운로드를 시작합니다...")
             print("이 작업은 모델 크기에 따라 시간이 다소 걸릴 수 있습니다.")
             
-            # 스트리밍 옵션으로 다운로드 진행 상태를 표시합니다.
             current_status = ""
             for progress in ollama.pull(self.OLLAMA_MODEL_NAME, stream=True):
                 status = progress.get('status')
                 if status != current_status:
                     current_status = status
-                    # 줄바꿈 없이 상태를 계속 업데이트하여 깔끔하게 보여줍니다.
                     sys.stdout.write(f'\r  - 상태: {current_status}')
                     sys.stdout.flush()
 
@@ -160,6 +153,4 @@ class ResourceManager:
         except Exception as e:
             print(f"\nOllama 모델 초기화 중 오류 발생: {e}")
             print("   Ollama 애플리케이션이 백그라운드에서 실행 중인지 확인해주세요.")
-        # ---
-# 프로그램 전체에서 사용될 단 하나의 리소스 관리자 인스턴스를 생성합니다.
 resources = ResourceManager()

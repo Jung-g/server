@@ -1,7 +1,3 @@
-# main.py
-
-# 1. 필요한 모듈과 함수들을 가져옵니다.
-# resource_loader를 가장 먼저 import하면, 프로그램 시작 시 모든 리소스가 로딩됩니다.
 import re
 from .resource_loader import resources
 from .calculate_korean2gloss import get_best_translation
@@ -12,8 +8,6 @@ def is_jamo_or_numeric_only(text: str) -> bool:
     """
     입력된 텍스트가 한글 자모, 숫자, 공백으로만 구성되어 있는지 확인합니다.
     """
-    # ^: 문자열 시작, $: 문자열 끝
-    # [ㄱ-ㅎㅏ-ㅣ\d\s]+: 자모(ㄱ-ㅎ, ㅏ-ㅣ), 숫자(\d), 공백(\s)이 하나 이상(+) 있는지 검사
     pattern = r'^[ㄱ-ㅎㅏ-ㅣ\d\s]+$'
     return bool(re.fullmatch(pattern, text))
 
@@ -108,7 +102,6 @@ def main_translate(text: str)-> list:
     else:
         final_list = process_sentence(text)
             
-    # 최종 결과를 보기 좋게 출력합니다.
     print("\n" + "="*50)
     print(" 최종 표제어 리스트 ".center(50, "="))
     print(final_list)
