@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from core_method import verify_or_refresh_token, get_db
-from DB_Table import StudyRecord, Study, StudyStep, StudyStepMeta
+from DB_Table import StudyRecord, Study, StudyStepMeta
 from datetime import date, datetime, time, timedelta
 
 router = APIRouter(tags=["Calendar"])

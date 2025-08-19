@@ -9,11 +9,12 @@ from API.login_router import router as login_router
 from API.logout_router import router as logout_router
 from API.study_course_router import router as study_course_router
 from API.translate_router import router as translate_router
-from API.translate_router_F import router as translate_router_F
 from API.user_router import router as user_router
 from API.bookmark_router import router as bookmark_router
 from API.calendar_router import router as calendar_router
 from API.animation_router import router as animation_router
+
+# 서버 실행 시 사용되는 명령어 (vscode 하단 터미널에 입력)
 # uvicorn main:app --host 0.0.0.0 --port 80 --log-level debug --reload
 
 @asynccontextmanager
@@ -66,8 +67,7 @@ app.include_router(logout_router)
 app.include_router(dictionary_router, dependencies=[Depends(user_required)])
 
 # 번역
-app.include_router(translate_router_F, dependencies=[Depends(user_required)])
-# app.include_router(translate_router, dependencies=[Depends(user_required)])
+app.include_router(translate_router, dependencies=[Depends(user_required)])
 
 # 학습 코스 선택
 app.include_router(study_course_router, dependencies=[Depends(user_required)])

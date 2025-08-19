@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import and_

@@ -1,6 +1,0 @@
-js_korean_2_gloss/kobart_checkpoint-10000/model.safetensors filter=lfs diff=lfs merge=lfs -text
-js_korean_2_gloss/dataset/kobart_checkpoint-10000/model.safetensors filter=lfs diff=lfs merge=lfs -text
-js_korean_2_gloss/dataset/kobart_checkpoint-10000/optimizer.pt filter=lfs diff=lfs merge=lfs -text
-js_korean_2_gloss/dataset/kobart_lemma_to_sentence_model/model.safetensors filter=lfs diff=lfs merge=lfs -text
-js_korean_2_gloss/dataset/kot5_checkpoint-146000/model.safetensors filter=lfs diff=lfs merge=lfs -text
-js_korean_2_gloss/dataset/kot5_checkpoint-146000/optimizer.pt filter=lfs diff=lfs merge=lfs -text

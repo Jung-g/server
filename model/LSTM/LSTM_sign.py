@@ -192,7 +192,7 @@ class Predictor:
         
         # 디버깅용 출력
         char_for_debug = self.alphabet_actions[i_pred]
-        print(f"    [🔍Predictor|Alphabet] Raw Predict: '{char_for_debug}' (Conf: {confidence:.4f})")
+        print(f"    [Predictor|Alphabet] Raw Predict: '{char_for_debug}' (Conf: {confidence:.4f})")
 
         if confidence > self.config['CONF_THRESHOLD_ALPHABET']:
             self.alphabet_confirm_buffer.append(self.alphabet_actions[i_pred])
@@ -278,7 +278,7 @@ class SignLanguageRecognizer:
         predicted_alphabet, alphabet_conf = self.predictor.predict_fingerspelling(alphabet_feats)
 
         # 디버깅용 출력
-        print(f"[⚙️Recognizer|Stats] WordConf={word_conf:.2f}, AlphaConf={alphabet_conf:.2f}, Movement={movement:.2f}, Idle={self.idle_counter}")
+        print(f"[Recognizer|Stats] WordConf={word_conf:.2f}, AlphaConf={alphabet_conf:.2f}, Movement={movement:.2f}, Idle={self.idle_counter}")
         
         newly_recognized_token = None
         # 지문자 신뢰도가 단어 신뢰도보다 0.1(10%) 이상 높을 때만 지문자로 인정
@@ -287,14 +287,14 @@ class SignLanguageRecognizer:
             if not self.sentence_words or self.sentence_words[-1] != predicted_alphabet:
                 self.sentence_words.append(predicted_alphabet)
                 newly_recognized_token = predicted_alphabet
-                print(f"    ✅ [Recognizer] Alphabet Appended: '{predicted_alphabet}' (Conf: {alphabet_conf:.2f}) -> Current: '{' '.join(self.sentence_words)}'")
+                print(f"    [Recognizer] Alphabet Appended: '{predicted_alphabet}' (Conf: {alphabet_conf:.2f}) -> Current: '{' '.join(self.sentence_words)}'")
             self.predictor.reset_word_buffer()
         elif predicted_word and word_conf > self.config.get('CONF_THRESHOLD_WORD', 0.89):
             self.idle_counter = 0
             if not self.sentence_words or self.sentence_words[-1] != predicted_word:
                 self.sentence_words.append(predicted_word)
                 newly_recognized_token = predicted_word
-                print(f"    ✅ [Recognizer] Word Appended: '{predicted_word}' (Conf: {word_conf:.2f}) -> Current: '{' '.join(self.sentence_words)}'")
+                print(f"    [Recognizer] Word Appended: '{predicted_word}' (Conf: {word_conf:.2f}) -> Current: '{' '.join(self.sentence_words)}'")
             self.predictor.reset_word_buffer()
 
         return newly_recognized_token
@@ -315,7 +315,7 @@ class SignLanguageRecognizer:
             print(f"Error: Could not open video file at {video_path}")
             return "비디오 파일을 열 수 없습니다."
 
-        frame_idx = 0 # ---  디버깅용 프레임 카운터  ---
+        frame_idx = 0 # 디버깅용 프레임 카운터
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -324,7 +324,7 @@ class SignLanguageRecognizer:
             frame_idx += 1
             
             if frame_idx % 100 == 0:
-                print(f"    [ℹ️] Processing video file... Frame {frame_idx}")
+                print(f"    [Processing video file... Frame {frame_idx}]")
             
             # 비디오 프레임을 뒤집어 처리 (필요시)
             frame = cv2.flip(frame, 1)

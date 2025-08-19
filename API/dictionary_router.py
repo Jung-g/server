@@ -4,7 +4,6 @@ import traceback
 from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from anime.motion_merge import api_motion_merge, check_merge
 from core_method import get_db, verify_or_refresh_token
