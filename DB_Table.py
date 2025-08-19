@@ -1,4 +1,3 @@
-from datetime import datetime
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
 
@@ -21,7 +20,6 @@ class Word(Base):
     WID = Column(Integer, primary_key=True)
     Word = Column(String)
 
-    # animations = relationship("Animation", back_populates="word")
     bookmarks = relationship("BookMark", back_populates="word")
     study_steps = relationship("StudyStep", back_populates="word")
     detail = relationship("WordDetail", uselist=False, back_populates="word")
@@ -35,15 +33,6 @@ class WordDetail(Base):
     UpdatedTime  = Column(DateTime)
     
     word = relationship("Word", back_populates="detail")
-
-# Animation 테이블(미사용)
-# class Animation(Base):
-#     __tablename__ = "Animation"
-#     AID = Column(Integer, primary_key=True)
-#     WID = Column(Integer, ForeignKey("Word.WID"))
-#     AnimePath = Column(String)
-
-#     word = relationship("Word", back_populates="animations")
 
 # Study 테이블
 class Study(Base):
